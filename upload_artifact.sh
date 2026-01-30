@@ -31,7 +31,8 @@ deployCmd="mvn -q --no-transfer-progress deploy:deploy-file \
   -Dpackaging=jar \
   -Dfile=$jarFile \
   -DrepositoryId=github \
-  -Durl=$GITHUB_PACKAGES_URL"
+  -Durl=$GITHUB_PACKAGES_URL \
+  -DskipExisting=true"
 
 # Add POM if it exists
 if [ -f "$pomFile" ]; then
