@@ -16,6 +16,7 @@ cd "$( dirname "$0" )"
 . scripts/set_build_info.sh $1 $2
 
 #Update readme
+chmod +x ./scripts/fill_template.sh
 ./scripts/fill_template.sh README.template.md README.md
 
 #Push to git
