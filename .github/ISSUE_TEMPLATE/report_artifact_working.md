@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-Please follow the format strictly and do not modify the template. Please *always* test with the official sample app [here](https://github.com/jcefmaven/jcefsampleapp) (you will need to download the version using the maven artifact you want to test). You can add your own text under `Additional information`. In case the build was not working, please consider adding the console output, screenshots and steps to reproduce.
+Please follow the format strictly and do not modify the template. Please *always* test with the official sample app [here](https://github.com/jcefgithub/jcefsampleapp) (you will need to download the version using the maven artifact you want to test). You can add your own text under `Additional information`. In case the build was not working, please consider adding the console output, screenshots and steps to reproduce.
 
 **Tag**
 v1.0.0+jcef-XXXXXXX+cef-...

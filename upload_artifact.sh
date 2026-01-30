@@ -4,36 +4,52 @@ set -e
 if [ ! $# -eq 3 ]
   then
     echo "Usage: ./upload_artifact.sh <groupId> <artifactId> <version>"
-    echo "Release repo url should NOT end in /!"
     exit 1
 fi
 
 groupId=$1
 artifactId=$2
 version=$3
-pathGroupId=$(sed 's|\.|\/|g' <<< $groupId)
 
 #CD to the upload dir
 cd "$( dirname "$0" )" && cd upload
 
-echo "Uploading $artifactId-$version..."
-rm -rf groupId
-rm -f central-bundle.zip
-mkdir -p "$pathGroupId/$artifactId/$version"
-for file in "$artifactId-$version"*
-do
-  mv "$file" "$pathGroupId/$artifactId/$version"
-done
+GITHUB_PACKAGES_URL="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
 
-zip -r central-bundle.zip me
+echo "Uploading $artifactId-$version to GitHub Packages..."
 
-curl --request POST \
-  --verbose \
-  --header "Authorization: Bearer $(echo "$MAVEN_USERNAME:$MAVEN_CENTRAL_TOKEN" | base64)" \
-  --form bundle=@central-bundle.zip \
-  --form "name=$groupId.$artifactId.$version" \
-  --form publishingType=AUTOMATIC \
-  https://central.sonatype.com/api/v1/publisher/upload
+# Deploy the jar
+jarFile="$artifactId-$version.jar"
+pomFile="$artifactId-$version.pom"
+sourcesFile="$artifactId-$version-sources.jar"
+javadocFile="$artifactId-$version-javadoc.jar"
 
-rm -rf me
-rm central-bundle.zip
+deployCmd="mvn deploy:deploy-file \
+  -DgroupId=$groupId \
+  -DartifactId=$artifactId \
+  -Dversion=$version \
+  -Dpackaging=jar \
+  -Dfile=$jarFile \
+  -DrepositoryId=github \
+  -Durl=$GITHUB_PACKAGES_URL"
+
+# Add POM if it exists
+if [ -f "$pomFile" ]; then
+  deployCmd="$deployCmd -DpomFile=$pomFile"
+else
+  deployCmd="$deployCmd -DgeneratePom=true"
+fi
+
+# Add sources if they exist
+if [ -f "$sourcesFile" ]; then
+  deployCmd="$deployCmd -Dsources=$sourcesFile"
+fi
+
+# Add javadoc if it exists
+if [ -f "$javadocFile" ]; then
+  deployCmd="$deployCmd -Djavadoc=$javadocFile"
+fi
+
+eval $deployCmd
+
+echo "Done uploading $artifactId-$version."

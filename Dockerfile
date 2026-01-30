@@ -11,6 +11,6 @@ RUN apt-get -q update && \
 #Copy scipts, sources and templates
 COPY scripts scripts
 COPY templates templates
-COPY jcefmaven jcefmaven
+COPY jcefgithub jcefgithub
 RUN chmod +x scripts/*
 

@@ -39,11 +39,11 @@ echo "# Creating JCEF API for all platforms     #"
 echo "###########################################"
 ./generate_jcef_api.sh
 
-#jcefmaven
+#jcefgithub
 echo "###########################################"
-echo "# Creating jcefmaven for all platforms    #"
+echo "# Creating jcefgithub for all platforms    #"
 echo "###########################################"
-./generate_jcefmaven.sh
+./generate_jcefgithub.sh
 
 #Linux amd64
 echo "###########################################"

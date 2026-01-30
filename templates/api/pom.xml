@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- This file is generated automatically! Do not edit! -->
-    <!-- For further information, please refer to https://github.com/jcefmaven/jcefmaven -->
+    <!-- For further information, please refer to https://github.com/trethore/jcefgithub -->
 
-    <groupId>me.friwi</groupId>
+    <groupId>me.tytoo</groupId>
     <artifactId>jcef-api</artifactId>
     <version>{release_tag}</version>
 
@@ -33,9 +33,9 @@
             </roles>
         </developer>
         <developer>
-            <id>friwidev</id>
+            <id>tytoodev</id>
             <name>FriwiDev</name>
-            <email>friwidev@gmail.com</email>
+            <email>tytoodev@gmail.com</email>
             <url>https://github.com/FriwiDev</url>
             <roles>
                 <role>providing binaries</role>
@@ -46,7 +46,7 @@
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/jcefmaven/jcefmaven/issues</url>
+        <url>https://github.com/trethore/jcefgithub/issues</url>
     </issueManagement>
 
     <scm>
@@ -56,14 +56,22 @@
         <url>https://github.com/chromiumembedded/java-cef</url>
     </scm>
     
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/trethore/jcefgithub</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
-            <groupId>me.friwi</groupId>
+            <groupId>me.tytoo</groupId>
             <artifactId>jogl-all</artifactId>
             <version>{jogl_build}</version>
         </dependency>
         <dependency>
-            <groupId>me.friwi</groupId>
+            <groupId>me.tytoo</groupId>
             <artifactId>gluegen-rt</artifactId>
             <version>{jogl_build}</version>
         </dependency>

@@ -1,7 +1,7 @@
 <div id="title" align="center">
 <h1>JCEF MAVEN</h1>
-<a href="../../releases/latest"><img alt="build-all" src="../../actions/workflows/maven-release.yml/badge.svg"></img></a>
-<a href="https://search.maven.org/artifact/me.friwi/jcefmaven"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/me.friwi/jcefmaven.svg?label=Maven%20Central"></img></a>
+<a href="../../releases/latest"><img alt="build-all" src="../../actions/workflows/github-release.yml/badge.svg"></img></a>
+<a href="https://search.maven.org/artifact/me.tytoo/jcefgithub"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/me.tytoo/jcefgithub.svg?label=Maven%20Central"></img></a>
 
 <h4>Independent project to produce maven artifacts for the JCef project</h4>
 <h6>Visit the JCEF repo at <a href="https://bitbucket.org/chromiumembedded/java-cef/src/master/">bitbucket</a> or <a href="https://github.com/chromiumembedded/java-cef">github</a> </h6>
@@ -23,26 +23,26 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 **Use with Maven:**
 ```Maven POM
 <dependency>
-    <groupId>me.friwi</groupId>
-    <artifactId>jcefmaven</artifactId>
+    <groupId>me.tytoo</groupId>
+    <artifactId>jcefgithub</artifactId>
     <version>141.0.10</version>
 </dependency>
 ```
 
 **Use with Gradle:**
 ```Gradle
-implementation 'me.friwi:jcefmaven:141.0.10'
+implementation 'me.tytoo:jcefgithub:141.0.10'
 ```
 
 ---
 
 ## How to use
-You can find the most recent versions of the artifacts on the [releases](../../releases) page of this repository. Alongside each release is also a table with platforms that have been tested. If you have tested a platform and build combination that has not been tested before (using the [sample app](https://github.com/jcefmaven/jcefsampleapp)), make sure to open a [new issue](../../issues/new?assignees=&labels=test+report&template=report_artifact_working.md&title=%5BTR%5D+Test+report) to share your findings!
+You can find the most recent versions of the artifacts on the [releases](../../releases) page of this repository. Alongside each release is also a table with platforms that have been tested. If you have tested a platform and build combination that has not been tested before (using the [sample app](https://github.com/jcefgithub/jcefsampleapp)), make sure to open a [new issue](../../issues/new?assignees=&labels=test+report&template=report_artifact_working.md&title=%5BTR%5D+Test+report) to share your findings!
 
 Once you found a version you want to use, include it as a dependency into your project. An example include for Maven and Gradle can be seen above.
-This will only include the base jcef library and jogl in your project. Natives will be downloaded and extracted on first run. If you want to skip downloading and instead bundle the natives, include the native artifacts in your project dependencies. You can see all of them [here](https://repo.maven.apache.org/maven2/me/friwi/). It is recommended to only include one bundle per build though, as each bundle is ~100MB. If you wish to include them, make sure you export one build per platform!
+This will only include the base jcef library and jogl in your project. Natives will be downloaded and extracted on first run. If you want to skip downloading and instead bundle the natives, include the native artifacts in your project dependencies. You can see all of them [here](https://repo.maven.apache.org/maven2/me/tytoo/). It is recommended to only include one bundle per build though, as each bundle is ~100MB. If you wish to include them, make sure you export one build per platform!
 
-Once you added your dependencies, you need to fire up jcefmaven in your code. No worries, it's not complicated!
+Once you added your dependencies, you need to fire up jcefgithub in your code. No worries, it's not complicated!
 ```java
 //Create a new CefAppBuilder instance
 CefAppBuilder builder = new CefAppBuilder();
@@ -63,10 +63,10 @@ From there, continue to write your app using jcef as you are used to. You can ca
 
 You can also set your custom download mirrors by using the `getMirrors()` and `setMirrors(Collection<String>)` methods. This currently defaults to this repository on `github.com` and alternatively to the central maven repo on `repo.maven.apache.org`. Further information can be found in the javadoc.
 
-If you need some code examples to create your first app, have a look at the [tests](jcefmaven/src/test) on this repository or at the [sample app](https://github.com/jcefmaven/jcefsampleapp).
+If you need some code examples to create your first app, have a look at the [tests](jcefgithub/src/test) on this repository or at the [sample app](https://github.com/jcefgithub/jcefsampleapp).
 
 #### Some additional useful code snippets
-If you want to get the current platform as determined by jcefmaven (e.g. to disable osr on win-arm64), you can use:
+If you want to get the current platform as determined by jcefgithub (e.g. to disable osr on win-arm64), you can use:
 ```java
 EnumPlatform platform = EnumPlatform.getCurrentPlatform();
 EnumOS os = platform.getOs();

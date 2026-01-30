@@ -24,6 +24,6 @@ export jogl_commit=e55af768993843ad9c782248252bf995e4f6ce99 #From META-INF
 export gluegen_git=git://jogamp.org/srv/scm/gluegen.git
 export gluegen_commit=3a68c5012e0e536639a2aa753eee180834421c46 #From META-INF
 
-#Set jcefmaven information
+#Set jcefgithub information
 export mvn_version=$2
 
