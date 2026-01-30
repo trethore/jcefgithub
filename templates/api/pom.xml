@@ -14,12 +14,12 @@
     <packaging>jar</packaging>
     <name>JCef API</name>
     <description>This package provides a Java API for the Chromium Embedded Framework</description>
-    <url>https://github.com/chromiumembedded/java-cef/</url>
+    <url>https://github.com/trethore/jcef</url>
 
     <licenses>
         <license>
             <name>BSD License</name>
-            <url>https://github.com/chromiumembedded/java-cef/blob/master/LICENSE.txt</url>
+            <url>https://github.com/trethore/jcef/blob/master/LICENSE.txt</url>
         </license>
     </licenses>
 
@@ -27,19 +27,18 @@
         <developer>
             <id>jcef</id>
             <name>JCef Team</name>
-            <url>https://github.com/chromiumembedded/java-cef/</url>
+            <url>https://github.com/trethore/jcef</url>
             <roles>
                 <role>developer</role>
             </roles>
         </developer>
         <developer>
             <id>tytoodev</id>
-            <name>FriwiDev</name>
-            <email>tytoodev@gmail.com</email>
-            <url>https://github.com/FriwiDev</url>
+            <name>Tytoo</name>
+            <url>https://github.com/trethore</url>
             <roles>
                 <role>providing binaries</role>
-                <role>maven maintainer</role>
+                <role>github repo maintainer</role>
             </roles>
         </developer>
     </developers>
@@ -50,10 +49,10 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/chromiumembedded/java-cef</connection>
-        <developerConnection>scm:git:https://github.com/chromiumembedded/java-cef</developerConnection>
+        <connection>scm:git:https://github.com/trethore/jcef</connection>
+        <developerConnection>scm:git:https://github.com/trethore/jcef</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/chromiumembedded/java-cef</url>
+        <url>https://github.com/trethore/jcef</url>
     </scm>
     
     <distributionManagement>
