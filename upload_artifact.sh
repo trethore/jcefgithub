@@ -18,11 +18,22 @@ GITHUB_PACKAGES_URL="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
 
 echo "Uploading $artifactId-$version to GitHub Packages..."
 
+# Skip if artifact already exists (GitHub Packages rejects overwrites with 409).
+groupPath="${groupId//./\/}"
+baseUrl="$GITHUB_PACKAGES_URL/$groupPath/$artifactId/$version"
+
 # Deploy the jar
 jarFile="$artifactId-$version.jar"
 pomFile="$artifactId-$version.pom"
 sourcesFile="$artifactId-$version-sources.jar"
 javadocFile="$artifactId-$version-javadoc.jar"
+
+if [ -n "$GITHUB_ACTOR" ] && [ -n "$GITHUB_TOKEN" ]; then
+  if curl -fsI -u "$GITHUB_ACTOR:$GITHUB_TOKEN" "$baseUrl/$pomFile" >/dev/null; then
+    echo "Artifact $artifactId-$version already exists. Skipping."
+    exit 0
+  fi
+fi
 
 deployCmd="mvn -q --no-transfer-progress deploy:deploy-file \
   -DgroupId=$groupId \
