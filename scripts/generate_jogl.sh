@@ -47,7 +47,7 @@ version="$jogl_build"
 base_url="$jogl_download/$group_path/$1/$version"
 echo "Using base URL: $base_url"
 
-native_classifiers=(linux-aarch64 linux-amd64 linux-armv6hf macosx-universal windows-amd64 windows-i586)
+native_classifiers=(linux-aarch64 linux-amd64 macosx-universal windows-amd64)
 if [ -n "$JOGL_NATIVE_CLASSIFIERS" ]; then
   IFS=',' read -r -a native_classifiers <<< "$JOGL_NATIVE_CLASSIFIERS"
 fi
