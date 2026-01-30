@@ -26,7 +26,7 @@ export release_download_url=$4
 
 #Fetch artifact
 echo "Fetching artifact for $2 from $4..."
-curl -s -L -o artifact.tar.gz $4
+curl -fLsS -o artifact.tar.gz $4
 
 #Extract artifact
 echo "Extracting..."
@@ -65,7 +65,7 @@ mkdir compile
 cp -r ../templates/natives/src compile
 ./../scripts/fill_template.sh ../templates/natives/src/main/java/me/tytoo/jcefgithub/CefNativeBundle.java compile/src/main/java/me/tytoo/jcefgithub/CefNativeBundle.java
 cd compile
-mvn clean package source:jar javadoc:jar
+mvn -q --no-transfer-progress clean package source:jar javadoc:jar
 cd ..
 
 echo "Exporting artifacts (2/4)..."
@@ -73,13 +73,13 @@ mv compile/target/jcef-natives-$2-$3-sources.jar /jcefout
 mv compile/target/jcef-natives-$2-$3-javadoc.jar /jcefout
 
 #Extracting native class and throw away compile dir
-unzip compile/target/jcef-natives-$2-$3.jar
+unzip -q compile/target/jcef-natives-$2-$3.jar
 rm -f META-INF/INDEX.LIST
 rm -rf compile
 
 #Compress contents
 echo "Compressing package (2/2)..."
-zip -r jcef-natives-$2-$3.jar jcef-natives-$2-$3.tar.gz me META-INF
+zip -qr jcef-natives-$2-$3.jar jcef-natives-$2-$3.tar.gz me META-INF
 
 #Generate a pom file
 echo "Generating pom..."

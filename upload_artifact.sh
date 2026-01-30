@@ -24,7 +24,7 @@ pomFile="$artifactId-$version.pom"
 sourcesFile="$artifactId-$version-sources.jar"
 javadocFile="$artifactId-$version-javadoc.jar"
 
-deployCmd="mvn deploy:deploy-file \
+deployCmd="mvn -q --no-transfer-progress deploy:deploy-file \
   -DgroupId=$groupId \
   -DartifactId=$artifactId \
   -Dversion=$version \

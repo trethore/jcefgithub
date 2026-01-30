@@ -19,7 +19,7 @@ cd dl
 
 #Fetch artifact
 echo "Fetching artifact for $download_url_macosx_amd64..."
-curl -s -L -o artifact.tar.gz $download_url_macosx_amd64
+curl -fLsS -o artifact.tar.gz $download_url_macosx_amd64
 
 #Extract artifact
 echo "Extracting..."
@@ -36,7 +36,7 @@ cd api
 #Relocate and prune the files for maven packaging
 echo "Building api binaries..."
 cp ../dl/bin/jcef_app.app/Contents/Java/jcef.jar jcef.jar
-unzip jcef.jar
+unzip -q jcef.jar
 rm jcef.jar
 cp ../dl/LICENSE.txt LICENSE.txt
 ./../../scripts/fill_template.sh ../../templates/api/README.txt README.txt
@@ -44,7 +44,7 @@ cp ../dl/LICENSE.txt LICENSE.txt
 
 #Compress contents
 echo "Compressing api binaries..."
-zip -r jcef-api-$release_tag.jar *
+zip -qr jcef-api-$release_tag.jar *
 
 ##########################
 #Create javadoc
@@ -62,7 +62,7 @@ cp ../dl/LICENSE.txt LICENSE.txt
 
 #Compress contents
 echo "Compressing api javadoc..."
-zip -r jcef-api-$release_tag-javadoc.jar *
+zip -qr jcef-api-$release_tag-javadoc.jar *
 
 ##########################
 #Create sources
@@ -73,7 +73,7 @@ cd src
 
 #Fetch from git, relocate and prune the files for maven packaging
 echo "Building api sources..."
-git clone $jcef_repository jcef
+git clone --quiet $jcef_repository jcef
 cd jcef
 git checkout $jcef_commit_long
 cd ..
@@ -85,7 +85,7 @@ cp ../dl/LICENSE.txt LICENSE.txt
 
 #Compress contents
 echo "Compressing api sources..."
-zip -r jcef-api-$release_tag-sources.jar *
+zip -qr jcef-api-$release_tag-sources.jar *
 
 ##########################
 #Generate a pom file

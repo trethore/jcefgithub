@@ -57,7 +57,7 @@ download_if_missing() {
   local dest="$LIBS_DIR/$filename"
   if [ ! -s "$dest" ]; then
     echo "Downloading $filename..."
-    if ! curl -f -L -o "$dest" "$base_url/$filename"; then
+    if ! curl -fLsS -o "$dest" "$base_url/$filename"; then
       echo "Failed to download $base_url/$filename"
       rm -f "$dest"
       exit 1
@@ -82,7 +82,7 @@ done
 #Extract artifacts
 echo "Extracting..."
 set +e
-unzip '*.jar'
+unzip -q '*.jar'
 rm *.jar
 set -e
 
@@ -91,7 +91,7 @@ rm -r META-INF
 
 #Compress contents
 echo "Compressing package..."
-zip -r "$1-$jogl_build.jar" *
+zip -qr "$1-$jogl_build.jar" *
 
 #Generate a pom file
 echo "Generating pom..."

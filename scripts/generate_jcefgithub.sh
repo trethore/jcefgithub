@@ -25,13 +25,13 @@ rm -f jcefgithub/src/main/resources/jcefgithub_build_meta.json
 ./../scripts/fill_template.sh jcefgithub/src/main/resources/jcefgithub_build_meta.json.template jcefgithub/src/main/resources/jcefgithub_build_meta.json
 
 #Install required artifacts to local repo
-mvn install:install-file -Dfile=/jcefout/jogl-all-$jogl_build.jar -DpomFile=/jcefout/jogl-all-$jogl_build.pom
-mvn install:install-file -Dfile=/jcefout/gluegen-rt-$jogl_build.jar -DpomFile=/jcefout/gluegen-rt-$jogl_build.pom
-mvn install:install-file -Dfile=/jcefout/jcef-api-$release_tag.jar -DpomFile=/jcefout/jcef-api-$release_tag.pom
+mvn -q --no-transfer-progress install:install-file -Dfile=/jcefout/jogl-all-$jogl_build.jar -DpomFile=/jcefout/jogl-all-$jogl_build.pom
+mvn -q --no-transfer-progress install:install-file -Dfile=/jcefout/gluegen-rt-$jogl_build.jar -DpomFile=/jcefout/gluegen-rt-$jogl_build.pom
+mvn -q --no-transfer-progress install:install-file -Dfile=/jcefout/jcef-api-$release_tag.jar -DpomFile=/jcefout/jcef-api-$release_tag.pom
 
 #Perform build
 cd jcefgithub
-mvn clean package source:jar javadoc:jar
+mvn -q --no-transfer-progress clean package source:jar javadoc:jar
 cd ..
 
 ##########################
