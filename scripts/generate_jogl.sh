@@ -13,24 +13,71 @@ fi
 cd "$( dirname "$0" )" && cd ..
 
 #Clear build dir
+REPO_ROOT="$(pwd)"
 rm -rf build
 mkdir build
 cd build
+
+if [ -z "$jogl_build" ]; then
+  jogl_build="2.5.0"
+  echo "jogl_build not set, defaulting to $jogl_build"
+fi
+if [ -z "$jogl_download" ]; then
+  jogl_download="https://jogamp.org/deployment/maven"
+  echo "jogl_download not set, defaulting to $jogl_download"
+fi
 
 echo "Creating $1 with version $jogl_build..."
 export platform=*
 export release_download_url=$jogl_download
 
+LIBS_DIR="$REPO_ROOT/libs"
+mkdir -p "$LIBS_DIR"
+
+if [[ "$1" == "jogl-all" ]] ; then
+   group_path="org/jogamp/jogl"
+elif [[ "$1" == "gluegen-rt" ]] ; then
+   group_path="org/jogamp/gluegen"
+else
+   echo "Unsupported artifact: $1"
+   exit 1
+fi
+
+version="$jogl_build"
+base_url="$jogl_download/$group_path/$1/$version"
+echo "Using base URL: $base_url"
+
+native_classifiers=(linux-aarch64 linux-amd64 linux-armv6hf macosx-universal windows-amd64 windows-i586)
+if [ -n "$JOGL_NATIVE_CLASSIFIERS" ]; then
+  IFS=',' read -r -a native_classifiers <<< "$JOGL_NATIVE_CLASSIFIERS"
+fi
+
+download_if_missing() {
+  local filename="$1"
+  local dest="$LIBS_DIR/$filename"
+  if [ ! -s "$dest" ]; then
+    echo "Downloading $filename..."
+    if ! curl -f -L -o "$dest" "$base_url/$filename"; then
+      echo "Failed to download $base_url/$filename"
+      rm -f "$dest"
+      exit 1
+    fi
+  fi
+}
+
 #Fetch artifact
 echo "Fetching artifacts..."
-curl -s -L -o $1.jar $jogl_download/$1.jar
-curl -s -L -o $1-natives-linux-aarch64.jar $jogl_download/$1-natives-linux-aarch64.jar
-curl -s -L -o $1-natives-linux-amd64.jar $jogl_download/$1-natives-linux-amd64.jar
-curl -s -L -o $1-natives-linux-armv6hf.jar $jogl_download/$1-natives-linux-armv6hf.jar
-curl -s -L -o $1-natives-linux-i586.jar $jogl_download/$1-natives-linux-i586.jar
-curl -s -L -o $1-natives-macosx-universal.jar $jogl_download/$1-natives-macosx-universal.jar
-curl -s -L -o $1-natives-windows-amd64.jar $jogl_download/$1-natives-windows-amd64.jar
-curl -s -L -o $1-natives-windows-i586.jar $jogl_download/$1-natives-windows-i586.jar
+download_if_missing "$1-$version.jar"
+for classifier in "${native_classifiers[@]}"; do
+  download_if_missing "$1-$version-natives-$classifier.jar"
+done
+download_if_missing "$1-$version-sources.jar"
+download_if_missing "$1-$version-javadoc.jar"
+
+cp "$LIBS_DIR/$1-$version.jar" "$1.jar"
+for classifier in "${native_classifiers[@]}"; do
+  cp "$LIBS_DIR/$1-$version-natives-$classifier.jar" "$1-natives-$classifier.jar"
+done
 
 #Extract artifacts
 echo "Extracting..."
@@ -50,53 +97,9 @@ zip -r "$1-$jogl_build.jar" *
 echo "Generating pom..."
 ./../scripts/fill_template.sh "../templates/$1/pom.xml" "$1-$jogl_build.pom"
 
-#Build sources
-if [[ "$1" == "jogl-all" ]] ; then
-   while ! (git clone "$jogl_git" sources && cd sources && git checkout "$jogl_commit") || (( count++ >= 5))
-   do
-     echo "Failed cloning sources, retrying..."
-     rm -rf sources
-   done
-   mkdir exp
-   # Merge Sources
-   cp -r sources/src/jogl/classes/* exp
-   cp -r sources/src/newt/classes/* exp
-   cp -r sources/src/nativewindow/classes/* exp
-   cd exp
-else
-   while ! (git clone "$gluegen_git" sources && cd sources && git checkout "$gluegen_commit") || (( count++ >= 5))
-   do
-     echo "Failed cloning sources, retrying..."
-     rm -rf sources
-   done
-   mkdir exp
-   cp -r sources/src/java/* exp
-   cd exp
-   # Prune files
-   cd com/jogamp/gluegen && rm -rf *.java *.html ant *gram pcpp procaddress structgen && cd ../../..
-   cd jogamp && rm -rf android && cd ..
-   rm -rf net
-fi
-zip -r ../$1-$jogl_build-sources.jar *
-cd ..
-rm -rf exp sources
-
-#Build javadoc
-mkdir javadoc
-cd javadoc
-if [[ "$1" == "jogl-all" ]] ; then
-    curl -s -L -o javadoc.7z $jogl_download/../archive/jogl-javadoc.7z
-    7z x javadoc.7z
-    cd jogl/javadoc
-    zip -r ../../../$1-$jogl_build-javadoc.jar *
-else
-    curl -s -L -o javadoc.7z $jogl_download/../archive/gluegen-javadoc.7z
-    7z x javadoc.7z
-    cd gluegen/javadoc
-    zip -r ../../../$1-$jogl_build-javadoc.jar *
-fi
-cd ../../..
-rm -rf javadoc
+#Use maven-provided sources/javadoc
+cp "$LIBS_DIR/$1-$version-sources.jar" "$1-$jogl_build-sources.jar"
+cp "$LIBS_DIR/$1-$version-javadoc.jar" "$1-$jogl_build-javadoc.jar"
 
 #Move built artifacts to export dir
 echo "Exporting artifacts..."
