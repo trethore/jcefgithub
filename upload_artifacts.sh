@@ -49,12 +49,9 @@ chmod +x upload_artifact.sh
 #Upload linux natives
 ./upload_artifact.sh me.tytoo jcef-natives-linux-amd64 $release_tag
 ./upload_artifact.sh me.tytoo jcef-natives-linux-arm64 $release_tag
-./upload_artifact.sh me.tytoo jcef-natives-linux-arm $release_tag
 
 #Upload windows natives
 ./upload_artifact.sh me.tytoo jcef-natives-windows-amd64 $release_tag
-./upload_artifact.sh me.tytoo jcef-natives-windows-arm64 $release_tag
-./upload_artifact.sh me.tytoo jcef-natives-windows-i386 $release_tag
 
 #Upload macosx natives
 ./upload_artifact.sh me.tytoo jcef-natives-macosx-amd64 $release_tag

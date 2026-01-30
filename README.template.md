@@ -12,8 +12,8 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 
 **Supports**
 <table>
-  <tr><td align="right"><a href="#"><img src="https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/linux.svg" alt="linux" width="32" height="32"></a></td><td align="left">amd64, arm64, arm</td></tr>
-  <tr><td align="right"><a href="#"><img src="https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/windows.svg" alt="windows" width="32" height="32"></a></td><td align="left">amd64, arm64, i386</td></tr>
+  <tr><td align="right"><a href="#"><img src="https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/linux.svg" alt="linux" width="32" height="32"></a></td><td align="left">amd64, arm64</td></tr>
+  <tr><td align="right"><a href="#"><img src="https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/windows.svg" alt="windows" width="32" height="32"></a></td><td align="left">amd64</td></tr>
   <tr><td align="right"><a href="#"><img src="https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/apple.svg" alt="macosx" width="32" height="32"></a></td><td align="left">amd64, arm64</td></tr>
 </table>
   
@@ -66,7 +66,7 @@ You can also set your custom download mirrors by using the `getMirrors()` and `s
 If you need some code examples to create your first app, have a look at the [tests](jcefgithub/src/test) on this repository or at the [sample app](https://github.com/jcefgithub/jcefsampleapp).
 
 #### Some additional useful code snippets
-If you want to get the current platform as determined by jcefgithub (e.g. to disable osr on win-arm64), you can use:
+If you want to get the current platform as determined by jcefgithub (e.g. to tweak behavior per platform), you can use:
 ```java
 EnumPlatform platform = EnumPlatform.getCurrentPlatform();
 EnumOS os = platform.getOs();
@@ -85,7 +85,6 @@ CefVersion cefVersion = cefApp.getVersion();
 - Java 8 or later
 
 ## Limitations
-- No OSR mode supported on win-arm64 (no jogamp)
 - `CefApp.addAppHandler(...)` should not be used. Use `builder.setAppHandler(...)` instead (requires a `CefMavenAppHandlerAdapter`)
 - To run on JDK 16 or later:
 
@@ -106,4 +105,3 @@ To use OSR (off-screen render) mode, add these flags for JOGL:
 ## Reporting bugs
 Please only report bugs here that are related to the maven artifacts.
 Please report bugs in JCEF/CEF to the [corresponding repository on Bitbucket](https://bitbucket.org/chromiumembedded/).
-

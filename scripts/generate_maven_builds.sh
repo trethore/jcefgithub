@@ -57,12 +57,6 @@ echo "# Creating native build for linux-arm64   #"
 echo "###########################################"
 ./generate_natives.sh linux64 linux-arm64 $release_tag $download_url_linux_arm64
 
-#Linux arm
-echo "###########################################"
-echo "# Creating native build for linux-arm     #"
-echo "###########################################"
-./generate_natives.sh linux32 linux-arm $release_tag $download_url_linux_arm
-
 #Macos amd64
 echo "###########################################"
 echo "# Creating native build for macosx-amd64  #"
@@ -80,16 +74,3 @@ echo "###########################################"
 echo "# Creating native build for windows-amd64 #"
 echo "###########################################"
 ./generate_natives.sh win64 windows-amd64 $release_tag $download_url_windows_amd64
-
-#Windows arm64
-echo "###########################################"
-echo "# Creating native build for windows-arm64 #"
-echo "###########################################"
-./generate_natives.sh win64 windows-arm64 $release_tag $download_url_windows_arm64
-
-#Windows i386
-echo "###########################################"
-echo "# Creating native build for windows-i386  #"
-echo "###########################################"
-./generate_natives.sh win32 windows-i386 $release_tag $download_url_windows_i386
-
