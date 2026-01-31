@@ -2,9 +2,11 @@ package me.tytoo.jcefgithub;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
 import org.cef.CefApp;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
@@ -59,9 +61,11 @@ public class CefBuildInfo {
     }
 
     private static CefBuildInfo loadData(InputStream in) throws IOException {
-        Map object;
+        Map<String, Object> object;
+        Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
         try {
-            object = GSON.fromJson(new InputStreamReader(in), Map.class);
+            object = GSON.fromJson(new InputStreamReader(in), type);
         } catch (JsonParseException e) {
             throw new IOException("Invalid json content in build_meta.json", e);
         } finally {

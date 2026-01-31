@@ -1,10 +1,12 @@
 package me.tytoo.jcefgithub.impl.step.fetch;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import me.tytoo.jcefgithub.CefBuildInfo;
 import me.tytoo.jcefgithub.EnumPlatform;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
@@ -105,12 +107,14 @@ public class PackageDownloader {
     }
 
     private static String loadJCefMavenVersion() throws IOException {
-        Map object;
+        Map<String, Object> object;
+        Type type = new TypeToken<Map<String, Object>>() {
+        }.getType();
         try (InputStream in = PackageDownloader.class.getResourceAsStream("/jcefgithub_build_meta.json")) {
             if (in == null) {
                 throw new IOException("/jcefgithub_build_meta.json not found on class path");
             }
-            object = GSON.fromJson(new InputStreamReader(in), Map.class);
+            object = GSON.fromJson(new InputStreamReader(in), type);
         } catch (Exception e) {
             throw new IOException("Invalid json content in jcefgithub_build_meta.json", e);
         }
