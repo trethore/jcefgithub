@@ -24,13 +24,13 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 <dependency>
     <groupId>me.tytoo</groupId>
     <artifactId>jcefgithub</artifactId>
-    <version>143.0.14.1</version>
+    <version>143.0.14.2</version>
 </dependency>
 ```
 
 **Use with Gradle:**
 ```Gradle
-implementation 'me.tytoo:jcefgithub:143.0.14.1'
+implementation 'me.tytoo:jcefgithub:143.0.14.2'
 ```
 
 ---
