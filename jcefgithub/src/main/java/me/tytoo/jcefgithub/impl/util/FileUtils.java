@@ -1,6 +1,7 @@
 package me.tytoo.jcefgithub.impl.util;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,9 +17,14 @@ public class FileUtils {
     public static void deleteDir(File dir) {
         Objects.requireNonNull(dir, "dir cannot be null");
         if (!dir.exists()) return;
-        if (dir.isDirectory()) {
-            for (File f : Objects.requireNonNull(dir.listFiles(), "Could not read contents of " + dir.getAbsolutePath())) {
-                deleteDir(f);
+        if (dir.isDirectory() && !Files.isSymbolicLink(dir.toPath())) {
+            File[] children = dir.listFiles();
+            if (children == null) {
+                LOGGER.log(Level.WARNING, "Could not read contents of " + dir.getAbsolutePath());
+            } else {
+                for (File f : children) {
+                    deleteDir(f);
+                }
             }
         }
         if (!dir.delete()) {

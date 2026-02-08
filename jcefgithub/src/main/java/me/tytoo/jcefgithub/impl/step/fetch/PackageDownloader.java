@@ -27,6 +27,8 @@ public class PackageDownloader {
     private static final Logger LOGGER = Logger.getLogger(PackageDownloader.class.getName());
 
     private static final int BUFFER_SIZE = 16 * 1024;
+    private static final int CONNECT_TIMEOUT_MILLIS = 15_000;
+    private static final int READ_TIMEOUT_MILLIS = 60_000;
 
     public static void downloadNatives(CefBuildInfo info, EnumPlatform platform, File destination,
                                        Consumer<Float> progressConsumer, Collection<String> mirrors) throws IOException {
@@ -54,44 +56,8 @@ public class PackageDownloader {
                     .replace("{tag}", info.getReleaseTag())
                     .replace("{mvn_version}", mvn_version);
             try {
-                //Open connection to mirror
-                URL url = new URL(m);
-                HttpURLConnection uc = (HttpURLConnection) url.openConnection();
-                try (InputStream in = uc.getInputStream()) {
-                    if (uc.getResponseCode() != 200) {
-                        LOGGER.log(Level.WARNING, "Request to mirror failed with code " + uc.getResponseCode()
-                                + " from server: " + m);
-                        continue;
-                    }
-                    long length = uc.getContentLengthLong();
-                    //Transfer data
-                    try (FileOutputStream fos = new FileOutputStream(destination)) {
-                        long progress = 0;
-                        progressConsumer.accept(0f);
-                        byte[] buffer = new byte[BUFFER_SIZE];
-                        long transferred = 0;
-                        int r;
-                        while ((r = in.read(buffer)) > 0) {
-                            fos.write(buffer, 0, r);
-                            transferred += r;
-                            long newprogress = transferred * 100 / length;
-                            if (newprogress > progress) {
-                                progress = newprogress;
-                                progressConsumer.accept((float) progress);
-                            }
-                        }
-                        fos.flush();
-                    }
-                    //Cleanup
-                    uc.disconnect();
+                if (downloadFromMirror(m, destination, progressConsumer)) {
                     return;
-                } catch (IOException e) {
-                    //Ignore error, will try fallback in follow-up code
-                    lastException = e;
-                    LOGGER.log(Level.WARNING, "Request failed with exception on mirror: " + m
-                            + " (" + e.getClass().getSimpleName()
-                            + (e.getMessage() == null ? "" : (": " + e.getMessage())) + ")");
-                    uc.disconnect();
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Request failed with exception on mirror: " + m, e);
@@ -119,5 +85,61 @@ public class PackageDownloader {
             throw new IOException("Invalid json content in jcefgithub_build_meta.json", e);
         }
         return (String) object.get("version");
+    }
+
+    private static boolean downloadFromMirror(String mirrorUrl, File destination, Consumer<Float> progressConsumer) throws IOException {
+        HttpURLConnection connection = openConnection(mirrorUrl);
+        try {
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                LOGGER.log(Level.WARNING, "Request to mirror failed with code " + responseCode
+                        + " from server: " + mirrorUrl);
+                return false;
+            }
+            transfer(connection, destination, progressConsumer);
+            return true;
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private static HttpURLConnection openConnection(String mirrorUrl) throws IOException {
+        URL url = new URL(mirrorUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
+        connection.setReadTimeout(READ_TIMEOUT_MILLIS);
+        return connection;
+    }
+
+    private static void transfer(HttpURLConnection connection, File destination, Consumer<Float> progressConsumer) throws IOException {
+        long length = connection.getContentLengthLong();
+        try (InputStream in = connection.getInputStream();
+             FileOutputStream fos = new FileOutputStream(destination, false)) {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            long transferred = 0;
+            long progress = 0;
+
+            progressConsumer.accept(0f);
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                if (read == 0) {
+                    continue;
+                }
+                fos.write(buffer, 0, read);
+                transferred += read;
+                if (length > 0) {
+                    long nextProgress = Math.min(100, transferred * 100 / length);
+                    if (nextProgress > progress) {
+                        progress = nextProgress;
+                        progressConsumer.accept((float) progress);
+                    }
+                }
+            }
+            fos.flush();
+
+            if (length <= 0 || progress < 100) {
+                progressConsumer.accept(100f);
+            }
+        }
     }
 }

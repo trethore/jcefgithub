@@ -205,68 +205,16 @@ public class CefAppBuilder {
      * @throws UnsupportedPlatformException if the platform is not supported
      */
     public CefAppBuilder install() throws IOException, UnsupportedPlatformException {
-        // check if already installed
         if (this.installed) {
             return this;
         }
+
         this.progressHandler.handleProgress(EnumProgress.LOCATING, EnumProgress.NO_ESTIMATION);
-        boolean installOk = CefInstallationChecker.checkInstallation(this.installDir);
-        if (!installOk) {
-            //Perform install
-            //Clear install dir
-            FileUtils.deleteDir(this.installDir);
-            if (!this.installDir.mkdirs()) throw new IOException("Could not create installation directory");
-            //Fetch a native input stream
-            InputStream nativesIn = PackageClasspathStreamer.streamNatives(
-                    CefBuildInfo.fromClasspath(), EnumPlatform.getCurrentPlatform());
-            try {
-                boolean downloading = false;
-                if (nativesIn == null) {
-                    this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, EnumProgress.NO_ESTIMATION);
-                    downloading = true;
-                    File download = new File(this.installDir, "download.zip.temp");
-                    PackageDownloader.downloadNatives(
-                            CefBuildInfo.fromClasspath(), EnumPlatform.getCurrentPlatform(),
-                            download, f -> this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, f),
-                            getMirrors());
-                    nativesIn = new ZipInputStream(new FileInputStream(download));
-                    ZipEntry entry;
-                    boolean found = false;
-                    while ((entry = ((ZipInputStream) nativesIn).getNextEntry()) != null) {
-                        if (entry.getName().endsWith(".tar.gz")) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        throw new IOException("Downloaded artifact did not contain a .tar.gz archive");
-                    }
-                }
-                //Extract a native bundle
-                this.progressHandler.handleProgress(EnumProgress.EXTRACTING, EnumProgress.NO_ESTIMATION);
-                TarGzExtractor.extractTarGZ(this.installDir, nativesIn);
-                if (downloading) {
-                    if (!new File(this.installDir, "download.zip.temp").delete()) {
-                        throw new IOException("Could not remove downloaded temp file");
-                    }
-                }
-            } finally {
-                // make sure nativesIn is closed if any of the above fails
-                if (nativesIn != null) {
-                    nativesIn.close();
-                }
-            }
-            //Install native bundle
-            this.progressHandler.handleProgress(EnumProgress.INSTALL, EnumProgress.NO_ESTIMATION);
-            //Remove quarantine on macosx
-            if (EnumPlatform.getCurrentPlatform().getOs().isMacOSX()) {
-                UnquarantineUtil.unquarantine(this.installDir);
-            }
-            //Lock installation
-            if (!(new File(installDir, "install.lock").createNewFile())) {
-                throw new IOException("Could not create install.lock to complete installation");
-            }
+
+        if (!CefInstallationChecker.checkInstallation(this.installDir)) {
+            installNativeBundle();
         }
+
         this.installed = true;
         return this;
     }
@@ -282,36 +230,110 @@ public class CefAppBuilder {
      * @throws CefInitializationException   if the initialization of JCef failed
      */
     public CefApp build() throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
-        //Check if we already have built an instance
         if (this.instance != null) {
             return this.instance;
         }
-        //Check if we are in the process of building an instance
+
+        if (!beginBuild()) {
+            return this.instance;
+        }
+
+        try {
+            this.install();
+            this.progressHandler.handleProgress(EnumProgress.INITIALIZING, EnumProgress.NO_ESTIMATION);
+            CefApp created = CefInitializer.initialize(this.installDir, this.jcefArgs, this.cefSettings);
+            return publishInstance(created);
+        } finally {
+            endBuild();
+        }
+    }
+
+    private void installNativeBundle() throws IOException, UnsupportedPlatformException {
+        prepareInstallDirectory();
+
+        CefBuildInfo buildInfo = CefBuildInfo.fromClasspath();
+        EnumPlatform currentPlatform = EnumPlatform.getCurrentPlatform();
+        File download = new File(this.installDir, "download.zip.temp");
+
+        boolean downloaded = false;
+        InputStream nativesIn = PackageClasspathStreamer.streamNatives(buildInfo, currentPlatform);
+        if (nativesIn == null) {
+            downloaded = true;
+            this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, EnumProgress.NO_ESTIMATION);
+            PackageDownloader.downloadNatives(
+                    buildInfo,
+                    currentPlatform,
+                    download,
+                    f -> this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, f),
+                    getMirrors());
+            nativesIn = openTarGzFromArchive(download);
+        }
+
+        try (InputStream in = nativesIn) {
+            this.progressHandler.handleProgress(EnumProgress.EXTRACTING, EnumProgress.NO_ESTIMATION);
+            TarGzExtractor.extractTarGZ(this.installDir, in);
+        }
+
+        if (downloaded && !download.delete()) {
+            throw new IOException("Could not remove downloaded temp file");
+        }
+
+        this.progressHandler.handleProgress(EnumProgress.INSTALL, EnumProgress.NO_ESTIMATION);
+        if (currentPlatform.getOs().isMacOSX()) {
+            UnquarantineUtil.unquarantine(this.installDir);
+        }
+        if (!new File(installDir, "install.lock").createNewFile()) {
+            throw new IOException("Could not create install.lock to complete installation");
+        }
+    }
+
+    private void prepareInstallDirectory() throws IOException {
+        FileUtils.deleteDir(this.installDir);
+        if (!this.installDir.mkdirs()) {
+            throw new IOException("Could not create installation directory");
+        }
+    }
+
+    private InputStream openTarGzFromArchive(File archive) throws IOException {
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(archive));
+        ZipEntry entry;
+        while ((entry = zipInputStream.getNextEntry()) != null) {
+            if (entry.getName().endsWith(".tar.gz")) {
+                return zipInputStream;
+            }
+        }
+        zipInputStream.close();
+        throw new IOException("Downloaded artifact did not contain a .tar.gz archive");
+    }
+
+    private boolean beginBuild() throws InterruptedException {
         synchronized (lock) {
-            if (building) {
-                //Check if instance was not created in the meantime
-                //to prevent race conditions
-                if (this.instance == null) {
-                    //Wait until building completed on another thread
-                    lock.wait();
-                }
-                return this.instance;
+            while (building && this.instance == null) {
+                lock.wait();
+            }
+            if (this.instance != null) {
+                return false;
             }
             this.building = true;
+            return true;
         }
-        this.install();
-        this.progressHandler.handleProgress(EnumProgress.INITIALIZING, EnumProgress.NO_ESTIMATION);
+    }
+
+    private CefApp publishInstance(CefApp created) {
         synchronized (lock) {
-            //Setting the instance has to occur in the synchronized block
-            //to prevent race conditions
-            this.instance = CefInitializer.initialize(this.installDir, this.jcefArgs, this.cefSettings);
-            //Add shutdown hook to attempt disposing our instance on jvm exit
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> this.instance.dispose()));
-            //Notify progress handler
-            this.progressHandler.handleProgress(EnumProgress.INITIALIZED, EnumProgress.NO_ESTIMATION);
-            //Resume waiting threads
+            if (this.instance == null) {
+                this.instance = created;
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> this.instance.dispose()));
+                this.progressHandler.handleProgress(EnumProgress.INITIALIZED, EnumProgress.NO_ESTIMATION);
+            }
+            return this.instance;
+        }
+    }
+
+    private void endBuild() {
+        synchronized (lock) {
+            this.building = false;
             lock.notifyAll();
         }
-        return this.instance;
     }
 }
