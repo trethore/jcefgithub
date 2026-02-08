@@ -1,7 +1,6 @@
 <div id="title" align="center">
 <h1>JCEF MAVEN</h1>
 <a href="../../releases/latest"><img alt="build-all" src="../../actions/workflows/github-release.yml/badge.svg"></img></a>
-<a href="https://search.maven.org/artifact/me.tytoo/jcefgithub"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/me.tytoo/jcefgithub.svg?label=Maven%20Central"></img></a>
 
 <h4>Independent project to produce maven artifacts for the JCef project</h4>
 <h6>Visit the JCEF repo at <a href="https://bitbucket.org/chromiumembedded/java-cef/src/master/">bitbucket</a> or <a href="https://github.com/chromiumembedded/java-cef">github</a> </h6>
