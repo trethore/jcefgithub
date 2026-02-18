@@ -39,7 +39,7 @@ cd ..
 ##########################
 echo "Exporting artifacts..."
 mv jcefgithub/target/jcefgithub-$mvn_version.jar /jcefout
-mv jcefgithub/target/jcefgithub-$mvn_version-all.jar /jcefout
+mv jcefgithub/target/jcefgithub-$mvn_version-all-relocated.jar /jcefout
 mv jcefgithub/target/jcefgithub-$mvn_version-javadoc.jar /jcefout
 mv jcefgithub/target/jcefgithub-$mvn_version-sources.jar /jcefout
 mv jcefgithub/pom.xml /jcefout/jcefgithub-$mvn_version.pom

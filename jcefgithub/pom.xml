@@ -57,17 +57,17 @@
         <dependency>
             <groupId>me.tytoo</groupId>
             <artifactId>jcef-api</artifactId>
-            <version>jcef-c1f0745+cef-108.4.13+ga98cd4c+chromium-108.0.5359.125</version>
+            <version>jcef-36f2966+cef-143.0.14+gdd46a37+chromium-143.0.7499.193</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.27.1</version>
+            <version>1.28.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.11.0</version>
+            <version>2.13.1</version>
         </dependency>
     </dependencies>
 
@@ -76,7 +76,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>fat-jar</id>
@@ -86,8 +86,18 @@
                         </goals>
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>all</shadedClassifierName>
+                            <shadedClassifierName>all-relocated</shadedClassifierName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.google.gson</pattern>
+                                    <shadedPattern>me.tytoo.jcefgithub.shaded.gson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.compress</pattern>
+                                    <shadedPattern>me.tytoo.jcefgithub.shaded.commons.compress</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>

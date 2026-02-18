@@ -24,7 +24,7 @@ baseUrl="$GITHUB_PACKAGES_URL/$groupPath/$artifactId/$version"
 
 # Deploy the jar
 jarFile="$artifactId-$version.jar"
-fatJarFile="$artifactId-$version-all.jar"
+relocatedFatJarFile="$artifactId-$version-all-relocated.jar"
 pomFile="$artifactId-$version.pom"
 sourcesFile="$artifactId-$version-sources.jar"
 javadocFile="$artifactId-$version-javadoc.jar"
@@ -63,9 +63,9 @@ if [ -f "$javadocFile" ]; then
   deployCmd="$deployCmd -Djavadoc=$javadocFile"
 fi
 
-# Add fat jar with classifier 'all' if it exists
-if [ -f "$fatJarFile" ]; then
-  deployCmd="$deployCmd -Dfiles=$fatJarFile -Dclassifiers=all -Dtypes=jar"
+# Add fat jar with classifier 'all-relocated' if it exists
+if [ -f "$relocatedFatJarFile" ]; then
+  deployCmd="$deployCmd -Dfiles=$relocatedFatJarFile -Dclassifiers=all-relocated -Dtypes=jar"
 fi
 
 eval $deployCmd

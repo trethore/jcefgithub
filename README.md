@@ -33,18 +33,18 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 implementation 'me.tytoo:jcefgithub:143.0.14.6'
 ```
 
-**Use fat jar (includes dependencies):**
+**Use relocated fat jar (includes dependencies):**
 ```Maven POM
 <dependency>
     <groupId>me.tytoo</groupId>
     <artifactId>jcefgithub</artifactId>
     <version>143.0.14.6</version>
-    <classifier>all</classifier>
+    <classifier>all-relocated</classifier>
 </dependency>
 ```
 
 ```Gradle
-implementation('me.tytoo:jcefgithub:143.0.14.6:all') {
+implementation('me.tytoo:jcefgithub:143.0.14.6:all-relocated') {
     transitive = false
 }
 ```
