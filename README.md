@@ -24,13 +24,13 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 <dependency>
     <groupId>me.tytoo</groupId>
     <artifactId>jcefgithub</artifactId>
-    <version>143.0.14.6</version>
+    <version>143.0.14.7</version>
 </dependency>
 ```
 
 **Use with Gradle:**
 ```Gradle
-implementation 'me.tytoo:jcefgithub:143.0.14.6'
+implementation 'me.tytoo:jcefgithub:143.0.14.7'
 ```
 
 **Use relocated fat jar (includes dependencies):**
@@ -38,13 +38,13 @@ implementation 'me.tytoo:jcefgithub:143.0.14.6'
 <dependency>
     <groupId>me.tytoo</groupId>
     <artifactId>jcefgithub</artifactId>
-    <version>143.0.14.6</version>
+    <version>143.0.14.7</version>
     <classifier>all-relocated</classifier>
 </dependency>
 ```
 
 ```Gradle
-implementation('me.tytoo:jcefgithub:143.0.14.6:all-relocated') {
+implementation('me.tytoo:jcefgithub:143.0.14.7:all-relocated') {
     transitive = false
 }
 ```
