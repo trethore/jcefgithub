@@ -33,6 +33,22 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 implementation 'me.tytoo:jcefgithub:143.0.14.5'
 ```
 
+**Use fat jar (includes dependencies):**
+```Maven POM
+<dependency>
+    <groupId>me.tytoo</groupId>
+    <artifactId>jcefgithub</artifactId>
+    <version>143.0.14.5</version>
+    <classifier>all</classifier>
+</dependency>
+```
+
+```Gradle
+implementation('me.tytoo:jcefgithub:143.0.14.5:all') {
+    transitive = false
+}
+```
+
 ---
 
 ## How to use
