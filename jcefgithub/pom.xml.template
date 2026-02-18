@@ -12,7 +12,7 @@
     <version>{mvn_version}</version>
 
     <packaging>jar</packaging>    
-    <name>JCef Maven</name>
+    <name>JCef Github</name>
     <description>This package provides wrappers to initialize the Java Chromium Embedded Framework</description>
     <url>https://github.com/trethore/jcefgithub/</url>
     
