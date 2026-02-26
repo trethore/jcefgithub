@@ -1,0 +1,131 @@
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_meta:
+        description: 'Build meta to use as source'
+        required: true
+      mvn_version:
+        description: 'Maven version to use'
+        required: false
+        default: '1.0.0'
+      publish_target:
+        description: 'Where to publish artifacts'
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - github
+          - maven
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      BUILD_META: ${{ github.event.inputs.build_meta }}
+      MVN_VERSION: ${{ github.event.inputs.mvn_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Create artifacts
+        run: chmod +x generate_artifacts.sh && ./generate_artifacts.sh "$BUILD_META" "$MVN_VERSION"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: out/*
+
+  publish:
+    needs: build-and-package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - github
+          - maven
+    env:
+      BUILD_META: ${{ github.event.inputs.build_meta }}
+      MVN_VERSION: ${{ github.event.inputs.mvn_version }}
+      PUBLISH_TARGET: ${{ github.event.inputs.publish_target }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: out
+
+      - name: Publish to GitHub Packages
+        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        run: chmod +x upload_artifacts.sh && ./upload_artifacts.sh "$BUILD_META" "$MVN_VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Update README.md
+        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        run: |
+          chmod +x update_readme.sh
+          ./update_readme.sh "$BUILD_META" "$MVN_VERSION"
+
+      - name: Generate release info
+        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        run: |
+          cd scripts
+          chmod +x create_release_info.sh
+          ./create_release_info.sh "$BUILD_META" https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} ${{github.run_number}} "$MVN_VERSION"
+
+      - name: Create Release
+        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        run: |
+          gh release create ${{env.release_tag_name}} --title "${{env.release_name}}" --notes-file release_info/release_message.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add build_meta.json
+        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        run: |
+          gh release upload ${{env.release_tag_name}} release_info/build_meta.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts to GitHub release
+        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        run: |
+          cd out
+          gh release upload ${{env.release_tag_name}} $(find . -type f -name "*.jar" -printf "%p ")
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Maven Central
+        if: ${{ matrix.target == 'maven' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'maven') }}
+        run: chmod +x upload_artifacts_maven.sh && ./upload_artifacts_maven.sh "$BUILD_META" "$MVN_VERSION"
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}

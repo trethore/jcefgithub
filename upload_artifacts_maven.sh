@@ -171,9 +171,8 @@ fi
 echo "Deployment id: $deployment_id"
 
 status_url="https://central.sonatype.com/api/v1/publisher/status?id=$deployment_id"
-publish_url="https://central.sonatype.com/api/v1/publisher/deployment/$deployment_id"
 
-echo "Waiting for deployment to be published..."
+echo "Waiting for deployment to be validated..."
 for _ in {1..180}; do
   status_response="$(curl -fsS --request POST --header "Authorization: Bearer $auth_token" "$status_url")"
   deployment_state="$(printf '%s' "$status_response" | jq -r '.deploymentState')"
@@ -186,8 +185,8 @@ for _ in {1..180}; do
       exit 0
       ;;
     VALIDATED)
-      echo "Deployment validated, triggering publish..."
-      curl -fsS --request POST --header "Authorization: Bearer $auth_token" "$publish_url" > /dev/null
+      echo "Deployment validated successfully."
+      exit 0
       ;;
     FAILED)
       echo "Deployment failed."
@@ -199,5 +198,5 @@ for _ in {1..180}; do
   sleep 10
 done
 
-echo "Timed out waiting for deployment to finish publishing."
+echo "Timed out waiting for deployment validation."
 exit 1
