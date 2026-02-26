@@ -7,7 +7,7 @@
     <!-- This file is generated automatically! Do not edit! -->
     <!-- For further information, please refer to https://github.com/trethore/jcefgithub -->
 
-    <groupId>me.tytoo</groupId>
+    <groupId>io.github.trethore</groupId>
     <artifactId>jcef-natives-{platform}</artifactId>
     <version>{release_tag}</version>
 

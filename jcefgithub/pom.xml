@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>me.tytoo</groupId>
+    <groupId>io.github.trethore</groupId>
     <artifactId>jcefgithub</artifactId>
     <version>108.4.13</version>
 
@@ -55,7 +55,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>me.tytoo</groupId>
+            <groupId>io.github.trethore</groupId>
             <artifactId>jcef-api</artifactId>
             <version>jcef-36f2966+cef-143.0.14+gdd46a37+chromium-143.0.7499.193</version>
         </dependency>
@@ -91,11 +91,11 @@
                             <relocations>
                                 <relocation>
                                     <pattern>com.google.gson</pattern>
-                                    <shadedPattern>me.tytoo.jcefgithub.shaded.gson</shadedPattern>
+                                    <shadedPattern>io.github.trethore.jcefgithub.shaded.gson</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.commons.compress</pattern>
-                                    <shadedPattern>me.tytoo.jcefgithub.shaded.commons.compress</shadedPattern>
+                                    <shadedPattern>io.github.trethore.jcefgithub.shaded.commons.compress</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

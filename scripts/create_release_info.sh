@@ -1,45 +1,44 @@
 #!/bin/bash
 set -e
 
-if [ ! $# -eq 4 ]
-  then
-    echo "Usage: ./create_release_info.sh <build_meta> <actionsurl> <actionsrunnumber> <mvn_version>"
-    echo ""
-    echo "build_meta: the url to fetch the build meta from"
-    echo "actionsurl: the url pointing to the builder job"
-    echo "actionsrunnumber: the number of the current build"
-    echo "mvn_version: The maven version to export to"
-    exit 1
+if [ ! $# -eq 4 ]; then
+  echo "Usage: ./create_release_info.sh <build_meta> <actionsurl> <actionsrunnumber> <mvn_version>"
+  echo ""
+  echo "build_meta: the url to fetch the build meta from"
+  echo "actionsurl: the url pointing to the builder job"
+  echo "actionsrunnumber: the number of the current build"
+  echo "mvn_version: The maven version to export to"
+  exit 1
 fi
 
-#CD to release_info dir
+# CD to release_info dir
 cd "$( dirname "$0" )"
 
-#Set build info
-. set_build_info.sh $1 $4
+# Set build info
+. set_build_info.sh "$1" "$4"
 
-#Create release_info dir and cd to it
+# Create release_info dir and cd to it
 cd ..
 rm -r -f release_info
 mkdir release_info
 cd release_info
 
-#Pull from git
-git clone $jcef_repository jcef
+# Pull from git
+git clone "$jcef_repository" jcef
 cd jcef
-git checkout $jcef_commit_long
+git checkout "$jcef_commit_long"
 
-#Dump git commit message
+# Dump git commit message
 commit_message=$(git log -1 --pretty=%B)
 
-#Build final release information
-#Tag
-echo "release_tag_name=$4" >> $GITHUB_ENV
+# Build final release information
+# Tag
+echo "release_tag_name=$4" >> "$GITHUB_ENV"
 
-#Name
-echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV 
+# Name
+echo "release_name=JCEF Github $mvn_version" >> "$GITHUB_ENV"
 
-#Readme
+# Readme
 (
   echo "**Update JCEF to [$jcef_commit]($jcef_url)**"
   echo ""
@@ -51,7 +50,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "**Use with Maven:**"
   echo "\`\`\`"
   echo "<dependency>"
-  echo "    <groupId>me.tytoo</groupId>"
+  echo "    <groupId>io.github.trethore</groupId>"
   echo "    <artifactId>jcefgithub</artifactId>"
   echo "    <version>$mvn_version</version>"
   echo "</dependency>"
@@ -63,7 +62,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "##### Linux AMD64"
   echo "\`\`\`"
   echo "<dependency>"
-  echo "    <groupId>me.tytoo</groupId>"
+  echo "    <groupId>io.github.trethore</groupId>"
   echo "    <artifactId>jcef-natives-linux-amd64</artifactId>"
   echo "    <version>jcef-$jcef_commit+cef-$cef_version</version>"
   echo "</dependency>"
@@ -72,7 +71,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "##### Linux ARM64"
   echo "\`\`\`"
   echo "<dependency>"
-  echo "    <groupId>me.tytoo</groupId>"
+  echo "    <groupId>io.github.trethore</groupId>"
   echo "    <artifactId>jcef-natives-linux-arm64</artifactId>"
   echo "    <version>jcef-$jcef_commit+cef-$cef_version</version>"
   echo "</dependency>"
@@ -81,7 +80,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "##### Macosx AMD64"
   echo "\`\`\`"
   echo "<dependency>"
-  echo "    <groupId>me.tytoo</groupId>"
+  echo "    <groupId>io.github.trethore</groupId>"
   echo "    <artifactId>jcef-natives-macosx-amd64</artifactId>"
   echo "    <version>jcef-$jcef_commit+cef-$cef_version</version>"
   echo "</dependency>"
@@ -90,7 +89,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "##### Macosx ARM64"
   echo "\`\`\`"
   echo "<dependency>"
-  echo "    <groupId>me.tytoo</groupId>"
+  echo "    <groupId>io.github.trethore</groupId>"
   echo "    <artifactId>jcef-natives-macosx-arm64</artifactId>"
   echo "    <version>jcef-$jcef_commit+cef-$cef_version</version>"
   echo "</dependency>"
@@ -99,7 +98,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "##### Windows AMD64"
   echo "\`\`\`"
   echo "<dependency>"
-  echo "    <groupId>me.tytoo</groupId>"
+  echo "    <groupId>io.github.trethore</groupId>"
   echo "    <artifactId>jcef-natives-windows-amd64</artifactId>"
   echo "    <version>jcef-$jcef_commit+cef-$cef_version</version>"
   echo "</dependency>"
@@ -108,7 +107,7 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo ""
   echo "**Use with Gradle:**"
   echo "\`\`\`"
-  echo "implementation 'me.tytoo:jcefgithub:$mvn_version'"
+  echo "implementation 'io.github.trethore:jcefgithub:$mvn_version'"
   echo "\`\`\`"
   echo ""
   echo "<details>"
@@ -116,27 +115,27 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo ""
   echo "##### Linux AMD64"
   echo "\`\`\`"
-  echo "implementation 'me.tytoo:jcef-natives-linux-amd64:jcef-$jcef_commit+cef-$cef_version'"
+  echo "implementation 'io.github.trethore:jcef-natives-linux-amd64:jcef-$jcef_commit+cef-$cef_version'"
   echo "\`\`\`"
   echo ""
   echo "##### Linux ARM64"
   echo "\`\`\`"
-  echo "implementation 'me.tytoo:jcef-natives-linux-arm64:jcef-$jcef_commit+cef-$cef_version'"
+  echo "implementation 'io.github.trethore:jcef-natives-linux-arm64:jcef-$jcef_commit+cef-$cef_version'"
   echo "\`\`\`"
   echo ""
   echo "##### Macosx AMD64"
   echo "\`\`\`"
-  echo "implementation 'me.tytoo:jcef-natives-macosx-amd64:jcef-$jcef_commit+cef-$cef_version'"
+  echo "implementation 'io.github.trethore:jcef-natives-macosx-amd64:jcef-$jcef_commit+cef-$cef_version'"
   echo "\`\`\`"
   echo ""
   echo "##### Macosx ARM64"
   echo "\`\`\`"
-  echo "implementation 'me.tytoo:jcef-natives-macosx-arm64:jcef-$jcef_commit+cef-$cef_version'"
+  echo "implementation 'io.github.trethore:jcef-natives-macosx-arm64:jcef-$jcef_commit+cef-$cef_version'"
   echo "\`\`\`"
   echo ""
   echo "##### Windows AMD64"
   echo "\`\`\`"
-  echo "implementation 'me.tytoo:jcef-natives-windows-amd64:jcef-$jcef_commit+cef-$cef_version'"
+  echo "implementation 'io.github.trethore:jcef-natives-windows-amd64:jcef-$jcef_commit+cef-$cef_version'"
   echo "\`\`\`"
   echo "</details>"
   echo ""
@@ -146,15 +145,15 @@ echo "release_name=JCEF Github $mvn_version" >> $GITHUB_ENV
   echo "\`\`\`"
   echo "**Test results of this release**"
   echo "These test results are provided by developers like yourself. If the platform you are currently running on is marked as \`untested\` below, please consider submitting a test report. You can report your test results using a [new issue](https://github.com/trethore/jcefgithub/issues/new/choose) in just a minute! It will help other developers in choosing a stable version. Thank you!"
-  echo "|  | <a href="#"><img src=\"https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/linux.svg\" alt=\"linux\" width=\"32\" height=\"32\"></a> | <a href="#"><img src=\"https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/windows.svg\" alt=\"windows\" width=\"32\" height=\"32\"></a> | <a href="#"><img src=\"https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/apple.svg\" alt=\"macosx\" width=\"32\" height=\"32\"></a> |"
+  echo "|  | <a href=\"#\"><img src=\"https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/linux.svg\" alt=\"linux\" width=\"32\" height=\"32\"></a> | <a href=\"#\"><img src=\"https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/windows.svg\" alt=\"windows\" width=\"32\" height=\"32\"></a> | <a href=\"#\"><img src=\"https://raw.githubusercontent.com/simple-icons/simple-icons/ce334b5bda8d8d054cfde7ce35caf40651078a28/icons/apple.svg\" alt=\"macosx\" width=\"32\" height=\"32\"></a> |"
   echo "|---|---|---|---|"
   echo "|amd64|[![Untested](https://img.shields.io/badge/linux--amd64-Untested-lightgrey)](#)|[![Untested](https://img.shields.io/badge/windows--amd64-Untested-lightgrey)](#)|[![Untested](https://img.shields.io/badge/macosx--amd64-Untested-lightgrey)](#)|"
   echo "|arm64|[![Untested](https://img.shields.io/badge/linux--arm64-Untested-lightgrey)](#)| - |[![Untested](https://img.shields.io/badge/macosx--arm64-Untested-lightgrey)](#)|"
 ) > ../release_message.md
 
-#Add build_meta.json
-curl -s -L -o ../build_meta.json $1
+# Add build_meta.json
+curl -s -L -o ../build_meta.json "$1"
 
-#Cleanup
+# Cleanup
 cd ..
 rm -rf jcef

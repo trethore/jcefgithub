@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
-if [ ! $# -eq 3 ]
-  then
-    echo "Usage: ./upload_artifact.sh <groupId> <artifactId> <version>"
-    exit 1
+if [ ! $# -eq 3 ]; then
+  echo "Usage: ./upload_artifact.sh <groupId> <artifactId> <version>"
+  exit 1
 fi
 
-groupId=$1
-artifactId=$2
-version=$3
+groupId="$1"
+artifactId="$2"
+version="$3"
 
-#CD to the upload dir
-cd "$( dirname "$0" )" && cd upload
+# CD to the upload dir
+cd "$( dirname "$0" )"
+cd upload
 
 GITHUB_PACKAGES_URL="https://maven.pkg.github.com/${GITHUB_REPOSITORY}"
 
@@ -68,6 +68,6 @@ if [ -f "$relocatedFatJarFile" ]; then
   deployCmd="$deployCmd -Dfiles=$relocatedFatJarFile -Dclassifiers=all-relocated -Dtypes=jar"
 fi
 
-eval $deployCmd
+eval "$deployCmd"
 
 echo "Done uploading $artifactId-$version."

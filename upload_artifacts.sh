@@ -1,19 +1,18 @@
 #!/bin/bash
 set -e
 
-if [ ! $# -eq 2 ]
-  then
-    echo "Usage: ./upload_artifacts.sh <build_meta_url> <mvn_version>"
-    exit 1
+if [ ! $# -eq 2 ]; then
+  echo "Usage: ./upload_artifacts.sh <build_meta_url> <mvn_version>"
+  exit 1
 fi
 
-#CD to dir of this script
+# CD to dir of this script
 cd "$( dirname "$0" )"
 
-#Set build info
-. scripts/set_build_info.sh $1 $2
+# Set build info
+. scripts/set_build_info.sh "$1" "$2"
 
-#Move artifacts to a non-protected folder
+# Move artifacts to a non-protected folder
 rm -rf upload
 mkdir upload
 cp out/* upload/
@@ -36,25 +35,25 @@ EOF
 
 chmod +x upload_artifact.sh
 
-#Upload Jogamp libraries
-./upload_artifact.sh me.tytoo jogl-all $jogl_build
-./upload_artifact.sh me.tytoo gluegen-rt $jogl_build
+# Upload Jogamp libraries
+./upload_artifact.sh io.github.trethore jogl-all "$jogl_build"
+./upload_artifact.sh io.github.trethore gluegen-rt "$jogl_build"
 
-#Upload API
-./upload_artifact.sh me.tytoo jcef-api $release_tag
+# Upload API
+./upload_artifact.sh io.github.trethore jcef-api "$release_tag"
 
-#Upload jcefgithub
-./upload_artifact.sh me.tytoo jcefgithub $mvn_version
+# Upload jcefgithub
+./upload_artifact.sh io.github.trethore jcefgithub "$mvn_version"
 
-#Upload linux natives
-./upload_artifact.sh me.tytoo jcef-natives-linux-amd64 $release_tag
-./upload_artifact.sh me.tytoo jcef-natives-linux-arm64 $release_tag
+# Upload linux natives
+./upload_artifact.sh io.github.trethore jcef-natives-linux-amd64 "$release_tag"
+./upload_artifact.sh io.github.trethore jcef-natives-linux-arm64 "$release_tag"
 
-#Upload windows natives
-./upload_artifact.sh me.tytoo jcef-natives-windows-amd64 $release_tag
+# Upload windows natives
+./upload_artifact.sh io.github.trethore jcef-natives-windows-amd64 "$release_tag"
 
-#Upload macosx natives
-./upload_artifact.sh me.tytoo jcef-natives-macosx-amd64 $release_tag
-./upload_artifact.sh me.tytoo jcef-natives-macosx-arm64 $release_tag
+# Upload macosx natives
+./upload_artifact.sh io.github.trethore jcef-natives-macosx-amd64 "$release_tag"
+./upload_artifact.sh io.github.trethore jcef-natives-macosx-arm64 "$release_tag"
 
 echo "Done uploading artifacts to GitHub Packages!"

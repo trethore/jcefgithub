@@ -25,7 +25,7 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 
 ```Maven POM
 <dependency>
-    <groupId>me.tytoo</groupId>
+    <groupId>io.github.trethore</groupId>
     <artifactId>jcefgithub</artifactId>
     <version>{mvn_version}</version>
 </dependency>
@@ -34,14 +34,14 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 **Use with Gradle:**
 
 ```Gradle
-implementation 'me.tytoo:jcefgithub:{mvn_version}'
+implementation 'io.github.trethore:jcefgithub:{mvn_version}'
 ```
 
 **Use relocated fat jar (includes dependencies):**
 
 ```Maven POM
 <dependency>
-    <groupId>me.tytoo</groupId>
+    <groupId>io.github.trethore</groupId>
     <artifactId>jcefgithub</artifactId>
     <version>{mvn_version}</version>
     <classifier>all-relocated</classifier>
@@ -49,7 +49,7 @@ implementation 'me.tytoo:jcefgithub:{mvn_version}'
 ```
 
 ```Gradle
-implementation('me.tytoo:jcefgithub:{mvn_version}:all-relocated') {
+implementation('io.github.trethore:jcefgithub:{mvn_version}:all-relocated') {
     transitive = false
 }
 ```
@@ -61,7 +61,7 @@ implementation('me.tytoo:jcefgithub:{mvn_version}:all-relocated') {
 You can find the most recent versions of the artifacts on the [releases](../../releases) page of this repository. Alongside each release is also a table with platforms that have been tested. If you have tested a platform and build combination that has not been tested before (using the [sample app](https://github.com/jcefgithub/jcefsampleapp)), make sure to open a [new issue](../../issues/new?assignees=&labels=test+report&template=report_artifact_working.md&title=%5BTR%5D+Test+report) to share your findings!
 
 Once you found a version you want to use, include it as a dependency into your project. An example include for Maven and Gradle can be seen above.
-This will only include the base jcef library and jogl in your project. Natives will be downloaded and extracted on first run. If you want to skip downloading and instead bundle the natives, include the native artifacts in your project dependencies. You can see all of them [here](https://repo.maven.apache.org/maven2/me/tytoo/). It is recommended to only include one bundle per build though, as each bundle is ~100MB. If you wish to include them, make sure you export one build per platform!
+This will only include the base jcef library and jogl in your project. Natives will be downloaded and extracted on first run. If you want to skip downloading and instead bundle the natives, include the native artifacts in your project dependencies. You can see all of them [here](https://repo.maven.apache.org/maven2/io/github/trethore/). It is recommended to only include one bundle per build though, as each bundle is ~100MB. If you wish to include them, make sure you export one build per platform!
 
 Once you added your dependencies, you need to fire up jcefgithub in your code. No worries, it's not complicated!
 

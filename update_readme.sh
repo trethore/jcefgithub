@@ -23,7 +23,8 @@ chmod +x ./scripts/fill_template.sh
 git add README.md
 git config user.name github-actions
 git config user.email github-actions@github.com
+target_branch="${GITHUB_REF_NAME:-master}"
 #Allow for no update of version number
 set +e
 git commit -m "Update README.md to $mvn_version"
-git push -u origin master
+git push -u origin "$target_branch"
