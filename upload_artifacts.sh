@@ -35,10 +35,6 @@ EOF
 
 chmod +x upload_artifact.sh
 
-# Upload Jogamp libraries
-./upload_artifact.sh io.github.trethore jogl-all "$jogl_build"
-./upload_artifact.sh io.github.trethore gluegen-rt "$jogl_build"
-
 # Upload API
 ./upload_artifact.sh io.github.trethore jcef-api "$release_tag"
 

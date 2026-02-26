@@ -21,18 +21,6 @@ rm -rf /jcefout/*
 
 echo "Creating maven artifacts for $mvn_version - $release_tag..."
 
-#jogl-all
-echo "###########################################"
-echo "# Creating jogl for all platforms         #"
-echo "###########################################"
-./generate_jogl.sh jogl-all
-
-#gluegen-rt
-echo "###########################################"
-echo "# Creating gluegen-rt for all platforms   #"
-echo "###########################################"
-./generate_jogl.sh gluegen-rt
-
 #API
 echo "###########################################"
 echo "# Creating JCEF API for all platforms     #"

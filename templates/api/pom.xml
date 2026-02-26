@@ -33,8 +33,8 @@
             </roles>
         </developer>
         <developer>
-            <id>tytoodev</id>
-            <name>Tytoo</name>
+            <id>trethore</id>
+            <name>Trethore</name>
             <url>https://github.com/trethore</url>
             <roles>
                 <role>providing binaries</role>
@@ -63,16 +63,4 @@
         </repository>
     </distributionManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>io.github.trethore</groupId>
-            <artifactId>jogl-all</artifactId>
-            <version>{jogl_build}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.trethore</groupId>
-            <artifactId>gluegen-rt</artifactId>
-            <version>{jogl_build}</version>
-        </dependency>
-    </dependencies>
 </project>

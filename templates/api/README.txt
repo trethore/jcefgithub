@@ -8,4 +8,4 @@
 # Visit the sources of this release: {jcef_url}
 # Visit the binaries of this release: {release_url}
 #
-# Made with love by @FriwiDev.
+# Maintained by @trethore.
