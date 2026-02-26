@@ -56,13 +56,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - github
-          - maven
+        target: ${{ fromJSON(github.event.inputs.publish_target == 'both' && '["github","maven"]' || format('["{0}"]', github.event.inputs.publish_target)) }}
     env:
       BUILD_META: ${{ github.event.inputs.build_meta }}
       MVN_VERSION: ${{ github.event.inputs.mvn_version }}
-      PUBLISH_TARGET: ${{ github.event.inputs.publish_target }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,41 +77,41 @@ jobs:
           path: out
 
       - name: Publish to GitHub Packages
-        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        if: ${{ matrix.target == 'github' }}
         run: chmod +x upload_artifacts.sh && ./upload_artifacts.sh "$BUILD_META" "$MVN_VERSION"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: Update README.md
-        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        if: ${{ matrix.target == 'github' }}
         run: |
           chmod +x update_readme.sh
           ./update_readme.sh "$BUILD_META" "$MVN_VERSION"
 
       - name: Generate release info
-        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        if: ${{ matrix.target == 'github' }}
         run: |
           cd scripts
           chmod +x create_release_info.sh
           ./create_release_info.sh "$BUILD_META" https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} ${{github.run_number}} "$MVN_VERSION"
 
       - name: Create Release
-        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        if: ${{ matrix.target == 'github' }}
         run: |
           gh release create ${{env.release_tag_name}} --title "${{env.release_name}}" --notes-file release_info/release_message.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add build_meta.json
-        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        if: ${{ matrix.target == 'github' }}
         run: |
           gh release upload ${{env.release_tag_name}} release_info/build_meta.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts to GitHub release
-        if: ${{ matrix.target == 'github' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'github') }}
+        if: ${{ matrix.target == 'github' }}
         run: |
           cd out
           gh release upload ${{env.release_tag_name}} $(find . -type f -name "*.jar" -printf "%p ")
@@ -122,7 +119,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to Maven Central
-        if: ${{ matrix.target == 'maven' && (env.PUBLISH_TARGET == 'both' || env.PUBLISH_TARGET == 'maven') }}
+        if: ${{ matrix.target == 'maven' }}
         run: chmod +x upload_artifacts_maven.sh && ./upload_artifacts_maven.sh "$BUILD_META" "$MVN_VERSION"
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}

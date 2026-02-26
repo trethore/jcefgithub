@@ -153,7 +153,9 @@ zip -qr ../central-bundle.zip .
 cd ..
 
 auth_token="$(printf '%s:%s' "$MAVEN_CENTRAL_USERNAME" "$MAVEN_CENTRAL_PASSWORD" | base64 | tr -d '\n')"
-upload_url="https://central.sonatype.com/api/v1/publisher/upload?name=jcefgithub-$mvn_version&publishingType=AUTOMATIC"
+deployment_name="io.github.trethore:jcefgithub:$mvn_version"
+encoded_deployment_name="$(printf '%s' "$deployment_name" | jq -sRr @uri)"
+upload_url="https://central.sonatype.com/api/v1/publisher/upload?name=$encoded_deployment_name&publishingType=AUTOMATIC"
 
 echo "Uploading bundle to Maven Central Publisher Portal..."
 deployment_id="$(curl -fsS --request POST \
