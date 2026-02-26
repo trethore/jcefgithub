@@ -172,7 +172,7 @@ echo "Deployment id: $deployment_id"
 
 status_url="https://central.sonatype.com/api/v1/publisher/status?id=$deployment_id"
 
-echo "Waiting for deployment to be validated..."
+echo "Waiting for deployment to reach PUBLISHING state..."
 for _ in {1..180}; do
   status_response="$(curl -fsS --request POST --header "Authorization: Bearer $auth_token" "$status_url")"
   deployment_state="$(printf '%s' "$status_response" | jq -r '.deploymentState')"
@@ -180,12 +180,8 @@ for _ in {1..180}; do
   echo "Deployment state: $deployment_state"
 
   case "$deployment_state" in
-    PUBLISHED)
-      echo "Deployment published successfully."
-      exit 0
-      ;;
-    VALIDATED)
-      echo "Deployment validated successfully."
+    PUBLISHING)
+      echo "Deployment entered PUBLISHING state."
       exit 0
       ;;
     FAILED)
@@ -198,5 +194,5 @@ for _ in {1..180}; do
   sleep 10
 done
 
-echo "Timed out waiting for deployment validation."
+echo "Timed out waiting for deployment to reach PUBLISHING state."
 exit 1
