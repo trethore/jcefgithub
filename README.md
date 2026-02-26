@@ -27,14 +27,14 @@ Embed a complete browser in your Java Apps - supports Java 8+</h5>
 <dependency>
     <groupId>io.github.trethore</groupId>
     <artifactId>jcefgithub</artifactId>
-    <version>143.0.14.9</version>
+    <version>143.0.14.10</version>
 </dependency>
 ```
 
 **Use with Gradle:**
 
 ```Gradle
-implementation 'io.github.trethore:jcefgithub:143.0.14.9'
+implementation 'io.github.trethore:jcefgithub:143.0.14.10'
 ```
 
 **Use relocated fat jar (includes dependencies):**
@@ -43,13 +43,13 @@ implementation 'io.github.trethore:jcefgithub:143.0.14.9'
 <dependency>
     <groupId>io.github.trethore</groupId>
     <artifactId>jcefgithub</artifactId>
-    <version>143.0.14.9</version>
+    <version>143.0.14.10</version>
     <classifier>all-relocated</classifier>
 </dependency>
 ```
 
 ```Gradle
-implementation('io.github.trethore:jcefgithub:143.0.14.9:all-relocated') {
+implementation('io.github.trethore:jcefgithub:143.0.14.10:all-relocated') {
     transitive = false
 }
 ```
