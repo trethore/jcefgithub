@@ -139,8 +139,6 @@ stage_artifact() {
 
 echo "Preparing artifacts for Maven Central..."
 
-stage_artifact "jogl-all" "$jogl_build"
-stage_artifact "gluegen-rt" "$jogl_build"
 stage_artifact "jcef-api" "$release_tag"
 stage_artifact "jcefgithub" "$mvn_version"
 stage_artifact "jcef-natives-linux-amd64" "$release_tag"

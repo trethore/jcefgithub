@@ -63,16 +63,4 @@
         </repository>
     </distributionManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>io.github.trethore</groupId>
-            <artifactId>jogl-all</artifactId>
-            <version>{jogl_build}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.trethore</groupId>
-            <artifactId>gluegen-rt</artifactId>
-            <version>{jogl_build}</version>
-        </dependency>
-    </dependencies>
 </project>

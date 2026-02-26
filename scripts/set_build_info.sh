@@ -16,13 +16,5 @@ echo "Initializing for build from $1 for $2..."
 #Download build_meta.json and import to local environment
 export $(curl -s -L $1 | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")
 
-#Set JOGL information
-export jogl_build=2.5.0
-export jogl_download=https://jogamp.org/deployment/maven
-export jogl_git=git://jogamp.org/srv/scm/jogl.git
-export jogl_commit=e55af768993843ad9c782248252bf995e4f6ce99 #From META-INF
-export gluegen_git=git://jogamp.org/srv/scm/gluegen.git
-export gluegen_commit=3a68c5012e0e536639a2aa753eee180834421c46 #From META-INF
-
 #Set jcefgithub information
 export mvn_version=$2
