@@ -144,6 +144,7 @@ stage_artifact "jcefgithub" "$mvn_version"
 stage_artifact "jcef-natives-linux-amd64" "$release_tag"
 stage_artifact "jcef-natives-linux-arm64" "$release_tag"
 stage_artifact "jcef-natives-windows-amd64" "$release_tag"
+stage_artifact "jcef-natives-windows-arm64" "$release_tag"
 stage_artifact "jcef-natives-macosx-amd64" "$release_tag"
 stage_artifact "jcef-natives-macosx-arm64" "$release_tag"
 

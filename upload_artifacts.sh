@@ -47,6 +47,7 @@ chmod +x upload_artifact.sh
 
 # Upload windows natives
 ./upload_artifact.sh io.github.trethore jcef-natives-windows-amd64 "$release_tag"
+./upload_artifact.sh io.github.trethore jcef-natives-windows-arm64 "$release_tag"
 
 # Upload macosx natives
 ./upload_artifact.sh io.github.trethore jcef-natives-macosx-amd64 "$release_tag"
