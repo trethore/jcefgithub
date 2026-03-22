@@ -2,7 +2,11 @@ package io.github.trethore.jcefgithub;
 
 /**
  * Enum representing all supported operating systems.
- * Fetch the current OS using: <pre>{@code EnumPlatform.getCurrentPlatform().getOs()}</pre>
+ * Fetch the current OS using:
+ * 
+ * <pre>{@code
+ * EnumPlatform.getCurrentPlatform().getOs()
+ * }</pre>
  *
  * @author Fritz Windisch
  */

@@ -23,7 +23,8 @@ public class CefInitializer {
 
     private static final String JAVA_LIBRARY_PATH = "java.library.path";
 
-    public static CefApp initialize(File installDir, List<String> cefArgs, CefSettings cefSettings) throws UnsupportedPlatformException, CefInitializationException {
+    public static CefApp initialize(File installDir, List<String> cefArgs, CefSettings cefSettings)
+            throws UnsupportedPlatformException, CefInitializationException {
         Objects.requireNonNull(installDir, "installDir cannot be null");
         Objects.requireNonNull(cefArgs, "cefArgs cannot be null");
         Objects.requireNonNull(cefSettings, "cefSettings cannot be null");
@@ -40,16 +41,8 @@ public class CefInitializer {
     }
 
     private static void patchJavaLibraryPath(File installDir) {
-        String path = System.getProperty(JAVA_LIBRARY_PATH);
-        if (path == null || path.isEmpty()) {
-            System.setProperty(JAVA_LIBRARY_PATH, installDir.getAbsolutePath());
-            return;
-        }
-        if (!path.endsWith(File.pathSeparator)) {
-            path = path + File.pathSeparator;
-        }
-        path += installDir.getAbsolutePath();
-        System.setProperty(JAVA_LIBRARY_PATH, path);
+        System.setProperty(JAVA_LIBRARY_PATH,
+                appendLibraryPath(System.getProperty(JAVA_LIBRARY_PATH), installDir.getAbsolutePath()));
     }
 
     private static void disableJcefDependencyLoader() {
@@ -66,18 +59,22 @@ public class CefInitializer {
     }
 
     private static void loadPlatformLibraries(EnumPlatform platform, File installDir, List<String> cefArgs,
-                                              CefSettings cefSettings) throws CefInitializationException {
-        if (platform.getOs().isWindows()) {
-            loadWindowsLibraries(installDir);
-            return;
+            CefSettings cefSettings) throws CefInitializationException {
+        switch (platform.getOs()) {
+            case WINDOWS -> loadWindowsLibraries(installDir);
+            case LINUX -> loadLinuxLibraries(installDir, cefArgs);
+            case MACOSX -> loadMacLibraries(installDir, cefArgs, cefSettings);
         }
-        if (platform.getOs().isLinux()) {
-            loadLinuxLibraries(installDir, cefArgs);
-            return;
+    }
+
+    private static String appendLibraryPath(String currentPath, String installPath) {
+        if (currentPath == null || currentPath.isEmpty()) {
+            return installPath;
         }
-        if (platform.getOs().isMacOSX()) {
-            loadMacLibraries(installDir, cefArgs, cefSettings);
+        if (currentPath.endsWith(File.pathSeparator)) {
+            return currentPath + installPath;
         }
+        return currentPath + File.pathSeparator + installPath;
     }
 
     private static void loadWindowsLibraries(File installDir) {

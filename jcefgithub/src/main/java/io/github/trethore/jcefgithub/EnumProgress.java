@@ -7,13 +7,26 @@ package io.github.trethore.jcefgithub;
  */
 public enum EnumProgress {
     /**
-     * <p>Installation is being located:</p>
-     * <p>- is there already an installation present?</p>
-     * <p>- if not: is the native bundle on classpath?</p>
-     * <p></p>
-     * <p>If the installation is present, skip to {@link #INITIALIZING}.</p>
-     * <p>If the native bundle is present, skip to {@link #EXTRACTING}.</p>
-     * <p>Else go to {@link #DOWNLOADING}.</p>
+     * <p>
+     * Installation is being located:
+     * </p>
+     * <p>
+     * - is there already an installation present?
+     * </p>
+     * <p>
+     * - if not: is the native bundle on classpath?
+     * </p>
+     * <p>
+     * </p>
+     * <p>
+     * If the installation is present, skip to {@link #INITIALIZING}.
+     * </p>
+     * <p>
+     * If the native bundle is present, skip to {@link #EXTRACTING}.
+     * </p>
+     * <p>
+     * Else go to {@link #DOWNLOADING}.
+     * </p>
      */
     LOCATING,
     /**
@@ -40,7 +53,8 @@ public enum EnumProgress {
     INITIALIZED;
 
     /**
-     * Magic value used to indicate that there is no progress estimation for the current
+     * Magic value used to indicate that there is no progress estimation for the
+     * current
      * installation step.
      */
     public static final float NO_ESTIMATION = -1f;

@@ -16,7 +16,8 @@ public class FileUtils {
 
     public static void deleteDir(File dir) {
         Objects.requireNonNull(dir, "dir cannot be null");
-        if (!dir.exists()) return;
+        if (!dir.exists())
+            return;
         if (dir.isDirectory() && !Files.isSymbolicLink(dir.toPath())) {
             File[] children = dir.listFiles();
             if (children == null) {

@@ -23,10 +23,12 @@ import java.util.zip.ZipInputStream;
  * Class used to configure the JCef environment. Specify
  * an installation directory, arguments to be passed to JCef
  * and configure the embedded {@link org.cef.CefSettings} to
- * your needs. When done, call {@link io.github.trethore.jcefgithub.CefAppBuilder#build()}
+ * your needs. When done, call
+ * {@link io.github.trethore.jcefgithub.CefAppBuilder#build()}
  * to create an {@link org.cef.CefApp} instance.
  * <p>
  * Example use:
+ * 
  * <pre>
  * {@code
  * //Create a new CefAppBuilder instance
@@ -46,7 +48,7 @@ import java.util.zip.ZipInputStream;
  * }
  * </pre>
  *
- * @author Fritz Windisch
+ * @author Titouan Réthoré
  */
 public class CefAppBuilder {
     private static final File DEFAULT_INSTALL_DIR = new File("jcef-bundle");
@@ -73,8 +75,10 @@ public class CefAppBuilder {
         jcefArgs.addAll(DEFAULT_JCEF_ARGS);
         cefSettings = DEFAULT_CEF_SETTINGS.clone();
         mirrors = new ArrayList<>();
-        mirrors.add("https://github.com/trethore/jcefgithub/releases/download/{mvn_version}/jcef-natives-{platform}-{tag}.jar");
-        mirrors.add("https://maven.pkg.github.com/trethore/jcefgithub/io/github/trethore/jcef-natives-{platform}/{tag}/jcef-natives-{platform}-{tag}.jar");
+        mirrors.add(
+                "https://github.com/trethore/jcefgithub/releases/download/{mvn_version}/jcef-natives-{platform}-{tag}.jar");
+        mirrors.add(
+                "https://maven.pkg.github.com/trethore/jcefgithub/io/github/trethore/jcef-natives-{platform}/{tag}/jcef-natives-{platform}-{tag}.jar");
     }
 
     /**
@@ -104,7 +108,8 @@ public class CefAppBuilder {
      * <p>
      * Due to installation using maven some arguments may be overwritten
      * again depending on your platform. Make sure to not specify arguments
-     * that break the installation process (e.g. subprocess path, resources path...)!
+     * that break the installation process (e.g. subprocess path, resources
+     * path...)!
      *
      * @return A mutable list of arguments to pass to the JCef library
      */
@@ -118,7 +123,8 @@ public class CefAppBuilder {
      * <p>
      * Due to installation using maven some arguments may be overwritten
      * again depending on your platform. Make sure to not specify arguments
-     * that break the installation process (e.g. subprocess path, resources path...)!
+     * that break the installation process (e.g. subprocess path, resources
+     * path...)!
      *
      * @param args the arguments to add
      */
@@ -150,26 +156,33 @@ public class CefAppBuilder {
     }
 
     /**
-     * Get a copy of all mirrors that are currently in use. To add another mirror, use the setter.
-     * Mirror urls can contain placeholders that are replaced when a fetch is attempted:
+     * Get a copy of all mirrors that are currently in use. To add another mirror,
+     * use the setter.
+     * Mirror urls can contain placeholders that are replaced when a fetch is
+     * attempted:
      * <br/>
      * {mvn_version}: The version of jcefgithub (e.g. 100.0.14.3) <br/>
      * {platform}: The desired platform for the download (e.g. linux-amd64) <br/>
-     * {tag}: The desired version tag for the download (e.g. jcef-08efede+cef-100.0.14+g4e5ba66+chromium-100.0.4896.75)
+     * {tag}: The desired version tag for the download (e.g.
+     * jcef-08efede+cef-100.0.14+g4e5ba66+chromium-100.0.4896.75)
      *
-     * @return A copy of all mirrors that are currently in use. First element will be attempted first.
+     * @return A copy of all mirrors that are currently in use. First element will
+     *         be attempted first.
      */
     public Collection<String> getMirrors() {
         return new ArrayList<>(mirrors);
     }
 
     /**
-     * Set mirror urls that should be used when downloading jcef. First element will be attempted first.
-     * Mirror urls can contain placeholders that are replaced when a fetch is attempted:
+     * Set mirror urls that should be used when downloading jcef. First element will
+     * be attempted first.
+     * Mirror urls can contain placeholders that are replaced when a fetch is
+     * attempted:
      * <br/>
      * {mvn_version}: The version of jcefgithub (e.g. 100.0.14.3) <br/>
      * {platform}: The desired platform for the download (e.g. linux-amd64) <br/>
-     * {tag}: The desired version tag for the download (e.g. jcef-08efede+cef-100.0.14+g4e5ba66+chromium-100.0.4896.75)
+     * {tag}: The desired version tag for the download (e.g.
+     * jcef-08efede+cef-100.0.14+g4e5ba66+chromium-100.0.4896.75)
      */
     public void setMirrors(Collection<String> mirrors) {
         Objects.requireNonNull(mirrors, "mirrors can not be null");
@@ -178,30 +191,40 @@ public class CefAppBuilder {
     }
 
     /**
-     * If installation skipping is enabled, no checks against the installation directory will be performed and the download,
-     * installation and verification of the jcef natives has to be performed by the individual developer.
-     * @param skipInstallation true if the installation process should be skipped, false otherwise
+     * If installation skipping is enabled, no checks against the installation
+     * directory will be performed and the download,
+     * installation and verification of the jcef natives has to be performed by the
+     * individual developer.
+     * 
+     * @param skipInstallation true if the installation process should be skipped,
+     *                         false otherwise
      */
     public void setSkipInstallation(boolean skipInstallation) {
         this.installed = skipInstallation;
     }
 
     /**
-     * If installation skipping is enabled, no checks against the installation directory will be performed and the download,
-     * installation and verification of the jcef natives has to be performed by the individual developer.
+     * If installation skipping is enabled, no checks against the installation
+     * directory will be performed and the download,
+     * installation and verification of the jcef natives has to be performed by the
+     * individual developer.
+     * 
      * @return true if the installation process should be skipped, false otherwise
      */
-    public boolean getSkipInstallation(){
+    public boolean getSkipInstallation() {
         return this.installed;
     }
 
     /**
-     * Helper method to install the native libraries/resources. Useful for triggering an install ahead of actually
-     * needing to create a CEF app instance.  This method is NOT thread safe and the caller must ensure only one thread
+     * Helper method to install the native libraries/resources. Useful for
+     * triggering an install ahead of actually
+     * needing to create a CEF app instance. This method is NOT thread safe and the
+     * caller must ensure only one thread
      * will call this method at a time.
      *
      * @return This builder instance
-     * @throws IOException                  if an artifact could not be fetched or IO-actions on disk failed
+     * @throws IOException                  if an artifact could not be fetched or
+     *                                      IO-actions on disk failed
      * @throws UnsupportedPlatformException if the platform is not supported
      */
     public CefAppBuilder install() throws IOException, UnsupportedPlatformException {
@@ -224,12 +247,15 @@ public class CefAppBuilder {
      * will return the previously built instance. This method is thread-safe.
      *
      * @return a built {@link org.cef.CefApp} instance
-     * @throws IOException                  if an artifact could not be fetched or IO-actions on disk failed
+     * @throws IOException                  if an artifact could not be fetched or
+     *                                      IO-actions on disk failed
      * @throws UnsupportedPlatformException if the platform is not supported
-     * @throws InterruptedException         if the installation process got interrupted
+     * @throws InterruptedException         if the installation process got
+     *                                      interrupted
      * @throws CefInitializationException   if the initialization of JCef failed
      */
-    public CefApp build() throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
+    public CefApp build()
+            throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
         if (this.instance != null) {
             return this.instance;
         }
@@ -255,42 +281,67 @@ public class CefAppBuilder {
         EnumPlatform currentPlatform = EnumPlatform.getCurrentPlatform();
         File download = new File(this.installDir, "download.zip.temp");
 
-        boolean downloaded = false;
-        InputStream nativesIn = PackageClasspathStreamer.streamNatives(buildInfo, currentPlatform);
-        if (nativesIn == null) {
-            downloaded = true;
-            this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, EnumProgress.NO_ESTIMATION);
-            PackageDownloader.downloadNatives(
-                    buildInfo,
-                    currentPlatform,
-                    download,
-                    f -> this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, f),
-                    getMirrors());
-            nativesIn = openTarGzFromArchive(download);
+        try (InputStream in = resolveNativeBundleStream(buildInfo, currentPlatform, download)) {
+            extractNativeBundle(in);
         }
 
-        try (InputStream in = nativesIn) {
-            this.progressHandler.handleProgress(EnumProgress.EXTRACTING, EnumProgress.NO_ESTIMATION);
-            TarGzExtractor.extractTarGZ(this.installDir, in);
-        }
-
-        if (downloaded && !download.delete()) {
-            throw new IOException("Could not remove downloaded temp file");
-        }
-
-        this.progressHandler.handleProgress(EnumProgress.INSTALL, EnumProgress.NO_ESTIMATION);
-        if (currentPlatform.getOs().isMacOSX()) {
-            UnquarantineUtil.unquarantine(this.installDir);
-        }
-        if (!new File(installDir, "install.lock").createNewFile()) {
-            throw new IOException("Could not create install.lock to complete installation");
-        }
+        deleteDownloadedArchive(download);
+        completeInstallation(currentPlatform);
     }
 
     private void prepareInstallDirectory() throws IOException {
         FileUtils.deleteDir(this.installDir);
         if (!this.installDir.mkdirs()) {
             throw new IOException("Could not create installation directory");
+        }
+    }
+
+    private InputStream resolveNativeBundleStream(CefBuildInfo buildInfo, EnumPlatform currentPlatform, File download)
+            throws IOException {
+        InputStream classpathBundle = PackageClasspathStreamer.streamNatives(buildInfo, currentPlatform);
+        if (classpathBundle != null) {
+            return classpathBundle;
+        }
+        return downloadNativeBundle(buildInfo, currentPlatform, download);
+    }
+
+    private InputStream downloadNativeBundle(CefBuildInfo buildInfo, EnumPlatform currentPlatform, File download)
+            throws IOException {
+        this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, EnumProgress.NO_ESTIMATION);
+        PackageDownloader.downloadNatives(
+                buildInfo,
+                currentPlatform,
+                download,
+                progress -> this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, progress),
+                getMirrors());
+        return openTarGzFromArchive(download);
+    }
+
+    private void extractNativeBundle(InputStream in) throws IOException {
+        this.progressHandler.handleProgress(EnumProgress.EXTRACTING, EnumProgress.NO_ESTIMATION);
+        TarGzExtractor.extractTarGZ(this.installDir, in);
+    }
+
+    private void deleteDownloadedArchive(File download) throws IOException {
+        if (!download.exists()) {
+            return;
+        }
+        if (!download.delete()) {
+            throw new IOException("Could not remove downloaded temp file");
+        }
+    }
+
+    private void completeInstallation(EnumPlatform currentPlatform) throws IOException {
+        this.progressHandler.handleProgress(EnumProgress.INSTALL, EnumProgress.NO_ESTIMATION);
+        if (currentPlatform.getOs().isMacOSX()) {
+            UnquarantineUtil.unquarantine(this.installDir);
+        }
+        createInstallLock();
+    }
+
+    private void createInstallLock() throws IOException {
+        if (!new File(installDir, "install.lock").createNewFile()) {
+            throw new IOException("Could not create install.lock to complete installation");
         }
     }
 

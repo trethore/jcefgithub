@@ -21,8 +21,10 @@ public class CefInstallationChecker {
     public static boolean checkInstallation(File installDir) throws UnsupportedPlatformException {
         Objects.requireNonNull(installDir, "installDir cannot be null");
         File buildInfo = new File(installDir, "build_meta.json");
-        if (!(new File(installDir, "install.lock").exists())) return false;
-        if (!(buildInfo.exists())) return false;
+        if (!(new File(installDir, "install.lock").exists()))
+            return false;
+        if (!(buildInfo.exists()))
+            return false;
         CefBuildInfo installed;
         try {
             installed = CefBuildInfo.fromFile(buildInfo);
@@ -37,7 +39,7 @@ public class CefInstallationChecker {
             LOGGER.log(Level.WARNING, "Error while parsing existing installation. Reinstalling.", e);
             return false;
         }
-        //The install is ok when tag and platform match
+        // The install is ok when tag and platform match
         return required.getReleaseTag().equals(installed.getReleaseTag())
                 && installed.getPlatform().equals(EnumPlatform.getCurrentPlatform().getIdentifier());
     }

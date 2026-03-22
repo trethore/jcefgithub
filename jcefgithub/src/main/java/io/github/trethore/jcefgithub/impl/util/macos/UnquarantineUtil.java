@@ -18,10 +18,11 @@ public class UnquarantineUtil {
     public static void unquarantine(File dir) {
         Objects.requireNonNull(dir, "dir cannot be null");
         try {
-            Process p = Runtime.getRuntime().exec(new String[]{"xattr", "-r", "-d", "com.apple.quarantine", dir.getAbsolutePath()});
+            Process p = Runtime.getRuntime()
+                    .exec(new String[] { "xattr", "-r", "-d", "com.apple.quarantine", dir.getAbsolutePath() });
             try {
                 if (p.waitFor() > 0) {
-                    //Command failed
+                    // Command failed
                     LOGGER.log(Level.WARNING, "Failed to update xattr! Command returned non-zero exit code.");
                 }
             } catch (InterruptedException e) {

@@ -1,24 +1,21 @@
 package io.github.trethore.jcefgithub;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
+import io.github.trethore.jcefgithub.impl.util.JsonStringMapLoader;
 import org.cef.CefApp;
 
-import java.io.*;
-import java.lang.reflect.Type;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
 
-
 /**
  * Provides information about jcefgithub builds
  *
- * @author Fritz Windisch
+ * @author Titouan Réthoré
  */
 public class CefBuildInfo {
-    private static final Gson GSON = new Gson();
     private static CefBuildInfo LOCAL_BUILD_INFO = null;
     private final String jcefUrl;
     private final String releaseTag;
@@ -36,15 +33,15 @@ public class CefBuildInfo {
      * Reads the in-use jcefgithub build info from classpath
      *
      * @return jcefgithub build info
-     * @throws NullPointerException if the build info "/build_meta.json" does not exist on classpath
+     * @throws NullPointerException if the build info "/build_meta.json" does not
+     *                              exist on classpath
      * @throws IOException          if reading the build info failed
      */
     public static CefBuildInfo fromClasspath() throws IOException {
         if (LOCAL_BUILD_INFO == null) {
             LOCAL_BUILD_INFO = loadData(
                     Objects.requireNonNull(CefApp.class.getResourceAsStream("/build_meta.json"),
-                            "The build_meta.json file from the jcef-api artifact could not be read")
-            );
+                            "The build_meta.json file from the jcef-api artifact could not be read"));
         }
         return LOCAL_BUILD_INFO;
     }
@@ -61,21 +58,16 @@ public class CefBuildInfo {
     }
 
     private static CefBuildInfo loadData(InputStream in) throws IOException {
-        Map<String, Object> object;
-        Type type = new TypeToken<Map<String, Object>>() {
-        }.getType();
-        try {
-            object = GSON.fromJson(new InputStreamReader(in), type);
-        } catch (JsonParseException e) {
-            throw new IOException("Invalid json content in build_meta.json", e);
-        } finally {
-            in.close();
-        }
+        Map<String, String> object = JsonStringMapLoader.loadStringMap(in, "build_meta.json");
         return new CefBuildInfo(
-                Objects.requireNonNull(object.get("jcef_url"), "No jcef_url specified in build_meta.json").toString(),
-                Objects.requireNonNull(object.get("release_tag"), "No release_tag specified in build_meta.json").toString(),
-                Objects.requireNonNull(object.get("release_url"), "No release_url specified in build_meta.json").toString(),
-                Objects.requireNonNull(object.get("platform"), "No platform specified in build_meta.json").toString());
+                requireValue(object, "jcef_url"),
+                requireValue(object, "release_tag"),
+                requireValue(object, "release_url"),
+                requireValue(object, "platform"));
+    }
+
+    private static String requireValue(Map<String, String> object, String key) {
+        return Objects.requireNonNull(object.get(key), "No " + key + " specified in build_meta.json");
     }
 
     public String getJcefUrl() {

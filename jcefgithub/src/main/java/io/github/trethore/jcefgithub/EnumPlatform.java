@@ -9,15 +9,16 @@ import java.util.logging.Logger;
 import static io.github.trethore.jcefgithub.impl.platform.PlatformPatterns.*;
 
 /**
- * Enum representing all supported operating system and architecture combinations.
+ * Enum representing all supported operating system and architecture
+ * combinations.
  * Fetch the currently applying platform using {@link #getCurrentPlatform()}.
  * Use {@link #getOs()} to extract the operating system only.
  *
- * @author Fritz Windisch
+ * @author Titouan Réthoré
  */
 public enum EnumPlatform {
-    //Order is important to try bigger matches first
-    //(darwin before win, x86_64 before x86, arm64 before arm)
+    // Order is important to try bigger matches first
+    // (darwin before win, x86_64 before x86, arm64 before arm)
     MACOSX_AMD64(OS_MACOSX, ARCH_AMD64, EnumOS.MACOSX),
     MACOSX_ARM64(OS_MACOSX, ARCH_ARM64, EnumOS.MACOSX),
     LINUX_AMD64(OS_LINUX, ARCH_AMD64, EnumOS.LINUX),
@@ -55,23 +56,32 @@ public enum EnumPlatform {
      * @throws UnsupportedPlatformException if the platform could not be determined
      */
     public static EnumPlatform getCurrentPlatform() throws UnsupportedPlatformException {
-        if (DETECTED_PLATFORM != null) return DETECTED_PLATFORM;
+        if (DETECTED_PLATFORM != null)
+            return DETECTED_PLATFORM;
+
         String osName = System.getProperty(PROPERTY_OS_NAME);
         String osArch = System.getProperty(PROPERTY_OS_ARCH);
-        //Look for a platform match
+
+        EnumPlatform detectedPlatform = detectPlatform(osName, osArch);
+        if (detectedPlatform != null) {
+            DETECTED_PLATFORM = detectedPlatform;
+            return detectedPlatform;
+        }
+
+        logUnsupportedPlatform(osName, osArch);
+        throw new UnsupportedPlatformException(osName, osArch);
+    }
+
+    private static EnumPlatform detectPlatform(String osName, String osArch) {
         for (EnumPlatform platform : values()) {
             if (platform.matches(osName, osArch)) {
-                DETECTED_PLATFORM = platform;
                 return platform;
             }
         }
-        //No platform matched
-        String supported = "";
-        for (EnumPlatform platform : values()) {
-            supported += platform.name() + "(" +
-                    PROPERTY_OS_NAME + ": " + Arrays.toString(platform.osMatch) + ", " +
-                    PROPERTY_OS_ARCH + ": " + Arrays.toString(platform.archMatch) + ")\n";
-        }
+        return null;
+    }
+
+    private static void logUnsupportedPlatform(String osName, String osArch) {
         LOGGER.log(Level.SEVERE, "Can not detect your current platform. Is it supported?\n" +
                 "If you think that this is in error, please open an issue " +
                 "providing your " + PROPERTY_OS_NAME + " and " + PROPERTY_OS_ARCH + " from below!\n" +
@@ -81,37 +91,54 @@ public enum EnumPlatform {
                 PROPERTY_OS_ARCH + ": \"" + osArch + "\"\n" +
                 "\n" +
                 "Supported platforms:\n" +
-                supported);
-        throw new UnsupportedPlatformException(osName, osArch);
+                supportedPlatformsDescription());
+    }
+
+    private static String supportedPlatformsDescription() {
+        StringBuilder supported = new StringBuilder();
+        for (EnumPlatform platform : values()) {
+            supported.append(platform.name())
+                    .append('(')
+                    .append(PROPERTY_OS_NAME).append(": ").append(Arrays.toString(platform.osMatch))
+                    .append(", ")
+                    .append(PROPERTY_OS_ARCH).append(": ").append(Arrays.toString(platform.archMatch))
+                    .append(")\n");
+        }
+        return supported.toString();
     }
 
     private boolean matches(String osName, String osArch) {
         Objects.requireNonNull(osName, "osName cannot be null");
         Objects.requireNonNull(osArch, "osArch cannot be null");
-        //Search for a correct OS match
-        boolean m = false;
-        for (String os : osMatch) {
-            if (osName.toLowerCase(Locale.ENGLISH).contains(os)) {
-                m = true; //Found one
-                break;
+
+        String normalizedOsName = osName.toLowerCase(Locale.ENGLISH);
+        String normalizedOsArch = osArch.toLowerCase(Locale.ENGLISH);
+        return containsAny(normalizedOsName, osMatch) && equalsAny(normalizedOsArch, archMatch);
+    }
+
+    private static boolean containsAny(String value, String[] fragments) {
+        for (String fragment : fragments) {
+            if (value.contains(fragment)) {
+                return true;
             }
         }
-        if (!m) {
-            return false; //OS mismatch
-        }
-        //Search for a correct architecture match
-        for (String arch : archMatch) {
-            if (osArch.toLowerCase(Locale.ENGLISH).equals(arch)) {
-                return true; //Also found matching arch
+        return false;
+    }
+
+    private static boolean equalsAny(String value, String[] candidates) {
+        for (String candidate : candidates) {
+            if (value.equals(candidate)) {
+                return true;
             }
         }
-        return false; //Found no matching arch
+        return false;
     }
 
     /**
      * Method used internally to fetch the identifier used in jcefbuild.
      *
-     * @return the platform identifier, a lower case string in the format of os-arch (e.g. linux-amd64)
+     * @return the platform identifier, a lower case string in the format of os-arch
+     *         (e.g. linux-amd64)
      */
     public String getIdentifier() {
         return identifier;

@@ -1,12 +1,13 @@
 package io.github.trethore.jcefgithub.impl.step.fetch;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import io.github.trethore.jcefgithub.CefBuildInfo;
 import io.github.trethore.jcefgithub.EnumPlatform;
+import io.github.trethore.jcefgithub.impl.util.JsonStringMapLoader;
 
-import java.io.*;
-import java.lang.reflect.Type;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
@@ -20,10 +21,9 @@ import java.util.logging.Logger;
  * Class used to download the native packages from GitHub or central repository.
  * Central repository is only used as fallback.
  *
- * @author Fritz Windisch
+ * @author Titouan Réthoré
  */
 public class PackageDownloader {
-    private static final Gson GSON = new Gson();
     private static final Logger LOGGER = Logger.getLogger(PackageDownloader.class.getName());
 
     private static final int BUFFER_SIZE = 16 * 1024;
@@ -31,63 +31,87 @@ public class PackageDownloader {
     private static final int READ_TIMEOUT_MILLIS = 60_000;
 
     public static void downloadNatives(CefBuildInfo info, EnumPlatform platform, File destination,
-                                       Consumer<Float> progressConsumer, Collection<String> mirrors) throws IOException {
+            Consumer<Float> progressConsumer, Collection<String> mirrors) throws IOException {
+        validateDownloadRequest(info, platform, destination, progressConsumer, mirrors);
+        String mavenVersion = loadJCefMavenVersion();
+        createDestinationFile(destination);
+        try {
+            downloadFromMirrors(info, platform, destination, progressConsumer, mirrors, mavenVersion);
+        } catch (IOException e) {
+            deleteIncompleteDestination(destination);
+            throw e;
+        }
+    }
+
+    private static String loadJCefMavenVersion() throws IOException {
+        Map<String, String> object = JsonStringMapLoader.loadClasspathStringMap(
+                PackageDownloader.class,
+                "/jcefgithub_build_meta.json");
+        return Objects.requireNonNull(object.get("version"), "No version specified in jcefgithub_build_meta.json");
+    }
+
+    private static void validateDownloadRequest(CefBuildInfo info, EnumPlatform platform, File destination,
+            Consumer<Float> progressConsumer, Collection<String> mirrors) {
         Objects.requireNonNull(info, "info cannot be null");
         Objects.requireNonNull(platform, "platform cannot be null");
         Objects.requireNonNull(destination, "destination cannot be null");
         Objects.requireNonNull(progressConsumer, "progressConsumer cannot be null");
         Objects.requireNonNull(mirrors, "mirrors can not be null");
         if (mirrors.isEmpty()) {
-            throw new RuntimeException("mirrors can not be empty");
+            throw new IllegalArgumentException("mirrors can not be empty");
         }
+    }
 
-        //Create target file
+    private static void createDestinationFile(File destination) throws IOException {
         if (!destination.createNewFile()) {
             throw new IOException("Could not create target file " + destination.getAbsolutePath());
         }
-        //Load maven version
-        String mvn_version = loadJCefMavenVersion();
+    }
 
-        //Try all mirrors
+    private static void deleteIncompleteDestination(File destination) {
+        if (!destination.exists()) {
+            return;
+        }
+        if (!destination.delete()) {
+            LOGGER.log(Level.WARNING, "Could not remove incomplete target file {0}", destination.getAbsolutePath());
+        }
+    }
+
+    private static void downloadFromMirrors(CefBuildInfo info, EnumPlatform platform, File destination,
+            Consumer<Float> progressConsumer, Collection<String> mirrors,
+            String mavenVersion) throws IOException {
         Exception lastException = null;
         for (String mirror : mirrors) {
-            String m = mirror
-                    .replace("{platform}", platform.getIdentifier())
-                    .replace("{tag}", info.getReleaseTag())
-                    .replace("{mvn_version}", mvn_version);
+            String resolvedMirror = resolveMirrorUrl(mirror, info, platform, mavenVersion);
             try {
-                if (downloadFromMirror(m, destination, progressConsumer)) {
+                if (downloadFromMirror(resolvedMirror, destination, progressConsumer)) {
                     return;
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Request failed with exception on mirror: " + m, e);
+                LOGGER.log(Level.WARNING, "Request failed with exception on mirror: " + resolvedMirror, e);
                 lastException = e;
             }
         }
-        //Throw exception if no download was successful
-        if (lastException != null) {
-            throw new IOException("None of the supplied mirrors were working", lastException);
-        } else {
+        throwIfDownloadFailed(lastException);
+    }
+
+    private static String resolveMirrorUrl(String mirror, CefBuildInfo info, EnumPlatform platform,
+            String mavenVersion) {
+        return mirror
+                .replace("{platform}", platform.getIdentifier())
+                .replace("{tag}", info.getReleaseTag())
+                .replace("{mvn_version}", mavenVersion);
+    }
+
+    private static void throwIfDownloadFailed(Exception lastException) throws IOException {
+        if (lastException == null) {
             throw new IOException("None of the supplied mirrors were working");
         }
+        throw new IOException("None of the supplied mirrors were working", lastException);
     }
 
-    private static String loadJCefMavenVersion() throws IOException {
-        Map<String, Object> object;
-        Type type = new TypeToken<Map<String, Object>>() {
-        }.getType();
-        try (InputStream in = PackageDownloader.class.getResourceAsStream("/jcefgithub_build_meta.json")) {
-            if (in == null) {
-                throw new IOException("/jcefgithub_build_meta.json not found on class path");
-            }
-            object = GSON.fromJson(new InputStreamReader(in), type);
-        } catch (Exception e) {
-            throw new IOException("Invalid json content in jcefgithub_build_meta.json", e);
-        }
-        return (String) object.get("version");
-    }
-
-    private static boolean downloadFromMirror(String mirrorUrl, File destination, Consumer<Float> progressConsumer) throws IOException {
+    private static boolean downloadFromMirror(String mirrorUrl, File destination, Consumer<Float> progressConsumer)
+            throws IOException {
         HttpURLConnection connection = openConnection(mirrorUrl);
         try {
             int responseCode = connection.getResponseCode();
@@ -111,10 +135,11 @@ public class PackageDownloader {
         return connection;
     }
 
-    private static void transfer(HttpURLConnection connection, File destination, Consumer<Float> progressConsumer) throws IOException {
+    private static void transfer(HttpURLConnection connection, File destination, Consumer<Float> progressConsumer)
+            throws IOException {
         long length = connection.getContentLengthLong();
         try (InputStream in = connection.getInputStream();
-             FileOutputStream fos = new FileOutputStream(destination, false)) {
+                FileOutputStream fos = new FileOutputStream(destination, false)) {
             byte[] buffer = new byte[BUFFER_SIZE];
             long transferred = 0;
             long progress = 0;
@@ -127,13 +152,7 @@ public class PackageDownloader {
                 }
                 fos.write(buffer, 0, read);
                 transferred += read;
-                if (length > 0) {
-                    long nextProgress = Math.min(100, transferred * 100 / length);
-                    if (nextProgress > progress) {
-                        progress = nextProgress;
-                        progressConsumer.accept((float) progress);
-                    }
-                }
+                progress = updateProgress(length, transferred, progress, progressConsumer);
             }
             fos.flush();
 
@@ -141,5 +160,20 @@ public class PackageDownloader {
                 progressConsumer.accept(100f);
             }
         }
+    }
+
+    private static long updateProgress(long length, long transferred, long currentProgress,
+            Consumer<Float> progressConsumer) {
+        if (length <= 0) {
+            return currentProgress;
+        }
+
+        long nextProgress = Math.min(100, transferred * 100 / length);
+        if (nextProgress <= currentProgress) {
+            return currentProgress;
+        }
+
+        progressConsumer.accept((float) nextProgress);
+        return nextProgress;
     }
 }

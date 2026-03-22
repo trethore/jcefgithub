@@ -23,7 +23,7 @@ public class TarGzExtractor {
         Objects.requireNonNull(installDir, "installDir cannot be null");
         Objects.requireNonNull(in, "in cannot be null");
         try (GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
-             TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn)) {
+                TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn)) {
             TarArchiveEntry entry;
 
             while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
@@ -52,7 +52,8 @@ public class TarGzExtractor {
 
     private static void createDirectory(File directory) {
         if (!directory.isDirectory() && !directory.mkdirs()) {
-            LOGGER.log(Level.SEVERE, "Unable to create directory during archive extraction: " + directory.getAbsolutePath());
+            LOGGER.log(Level.SEVERE,
+                    "Unable to create directory during archive extraction: " + directory.getAbsolutePath());
         }
     }
 
@@ -75,7 +76,8 @@ public class TarGzExtractor {
 
     private static void setExecutableIfNeeded(File target, int mode) {
         if ((mode & 0111) != 0 && !target.setExecutable(true, false)) {
-            LOGGER.log(Level.SEVERE, "Unable to mark path executable during archive extraction: " + target.getAbsolutePath());
+            LOGGER.log(Level.SEVERE,
+                    "Unable to mark path executable during archive extraction: " + target.getAbsolutePath());
         }
     }
 }
