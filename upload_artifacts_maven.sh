@@ -48,6 +48,8 @@ cd "$( dirname "$0" )"
 
 group_id="io.github.trethore"
 group_path="${group_id//./\/}"
+maven_central_base_url="https://repo1.maven.org/maven2"
+staged_artifact_count=0
 
 rm -rf upload
 mkdir upload
@@ -83,9 +85,21 @@ sign_and_checksum() {
   generate_checksum_files "$file.asc"
 }
 
+artifact_exists_on_maven_central() {
+  local artifact_id="$1"
+  local version="$2"
+  local pom_url="$maven_central_base_url/$group_path/$artifact_id/$version/$artifact_id-$version.pom"
+  curl -fsI "$pom_url" >/dev/null 2>&1
+}
+
 stage_artifact() {
   local artifact_id="$1"
   local version="$2"
+
+  if artifact_exists_on_maven_central "$artifact_id" "$version"; then
+    echo "Skipping $artifact_id:$version because it already exists on Maven Central"
+    return
+  fi
 
   local artifact_dir="central-bundle/$group_path/$artifact_id/$version"
   local basename="$artifact_id-$version"
@@ -134,6 +148,7 @@ stage_artifact() {
     sign_and_checksum "$destination_file"
   done
 
+  staged_artifact_count=$((staged_artifact_count + 1))
   echo "Prepared $artifact_id:$version for Maven Central bundle"
 }
 
@@ -147,6 +162,11 @@ stage_artifact "jcef-natives-windows-amd64" "$release_tag"
 stage_artifact "jcef-natives-windows-arm64" "$release_tag"
 stage_artifact "jcef-natives-macosx-amd64" "$release_tag"
 stage_artifact "jcef-natives-macosx-arm64" "$release_tag"
+
+if [ "$staged_artifact_count" -eq 0 ]; then
+  echo "All requested artifacts already exist on Maven Central. Nothing to publish."
+  exit 0
+fi
 
 rm -f central-bundle.zip
 cd central-bundle
