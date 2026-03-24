@@ -26,6 +26,7 @@ public class UnquarantineUtil {
                     LOGGER.log(Level.WARNING, "Failed to update xattr! Command returned non-zero exit code.");
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 LOGGER.log(Level.WARNING, "Failed to update xattr! Command got interrupted.", e);
             }
         } catch (IOException e) {

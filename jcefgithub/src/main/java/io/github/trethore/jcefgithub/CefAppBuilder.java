@@ -37,7 +37,7 @@ import java.util.zip.ZipInputStream;
  * //Configure the builder instance
  * builder.setInstallDir(new File("jcef-bundle")); //Default
  * builder.setProgressHandler(new ConsoleProgressHandler()); //Default
- * builder.addJCefArgs("--disable-gpu"); //Just an example
+ * builder.addJcefArgs("--disable-gpu"); //Just an example
  * builder.getCefSettings().windowless_rendering_enabled = true; //Default - select OSR mode
  *
  * //Set an app handler. Do not use CefApp.addAppHandler(...), it will break your code on MacOSX!
@@ -76,9 +76,9 @@ public class CefAppBuilder {
         cefSettings = DEFAULT_CEF_SETTINGS.clone();
         mirrors = new ArrayList<>();
         mirrors.add(
-                "https://github.com/trethore/jcefgithub/releases/download/{mvn_version}/jcef-natives-{platform}-{tag}.jar");
+                "https://repo1.maven.org/maven2/io/github/trethore/jcef-natives-{platform}/{tag}/jcef-natives-{platform}-{tag}.jar");
         mirrors.add(
-                "https://maven.pkg.github.com/trethore/jcefgithub/io/github/trethore/jcef-natives-{platform}/{tag}/jcef-natives-{platform}-{tag}.jar");
+                "https://github.com/trethore/jcefgithub/releases/download/{mvn_version}/jcef-natives-{platform}-{tag}.jar");
     }
 
     /**

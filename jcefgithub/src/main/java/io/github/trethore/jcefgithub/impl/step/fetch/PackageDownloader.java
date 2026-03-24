@@ -18,8 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Class used to download the native packages from GitHub or central repository.
- * Central repository is only used as fallback.
+ * Class used to download the native packages from the configured mirrors.
  *
  * @author Titouan Réthoré
  */

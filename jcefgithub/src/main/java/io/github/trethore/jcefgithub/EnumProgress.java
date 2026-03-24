@@ -30,8 +30,8 @@ public enum EnumProgress {
      */
     LOCATING,
     /**
-     * Downloading the native bundle from GitHub or central repository
-     * to the installation directory.
+     * Downloading the native bundle from one of the configured mirrors to the
+     * installation directory.
      */
     DOWNLOADING,
     /**

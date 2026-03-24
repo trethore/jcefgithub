@@ -50,10 +50,9 @@ public class TarGzExtractor {
         return target;
     }
 
-    private static void createDirectory(File directory) {
+    private static void createDirectory(File directory) throws IOException {
         if (!directory.isDirectory() && !directory.mkdirs()) {
-            LOGGER.log(Level.SEVERE,
-                    "Unable to create directory during archive extraction: " + directory.getAbsolutePath());
+            throw new IOException("Unable to create directory during archive extraction: " + directory.getAbsolutePath());
         }
     }
 
