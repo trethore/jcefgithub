@@ -49,7 +49,7 @@
             <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-source-plugin</artifactId><version>3.3.1</version><executions><execution><id>sources</id><goals><goal>jar-no-fork</goal></goals></execution></executions></plugin>
             <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-javadoc-plugin</artifactId><version>3.11.2</version><executions><execution><id>javadocs</id><goals><goal>jar</goal></goals></execution></executions></plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><version>3.6.1</version>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><version>3.6.2</version>
                 <executions><execution><id>fat-jar</id><phase>package</phase><goals><goal>shade</goal></goals><configuration>
                     <shadedArtifactAttached>true</shadedArtifactAttached><shadedClassifierName>all-relocated</shadedClassifierName><createDependencyReducedPom>false</createDependencyReducedPom>
                     <relocations>
