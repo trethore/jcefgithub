@@ -1,3 +1,9 @@
-out
-upload
-release_info
+/out/
+/upload/
+/release_info/
+/build/
+**/target/
+**/.flattened-pom.xml
+.idea/
+*.iml
+jcef-bundle/

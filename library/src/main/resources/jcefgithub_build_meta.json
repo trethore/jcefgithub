@@ -1,0 +1,9 @@
+{
+  "version": "${revision}",
+  "sha256_linux_amd64": "${sha256.linux.amd64}",
+  "sha256_linux_arm64": "${sha256.linux.arm64}",
+  "sha256_windows_amd64": "${sha256.windows.amd64}",
+  "sha256_windows_arm64": "${sha256.windows.arm64}",
+  "sha256_macosx_amd64": "${sha256.macosx.amd64}",
+  "sha256_macosx_arm64": "${sha256.macosx.arm64}"
+}

@@ -1,5 +1,5 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
 if [ ! $# -eq 2 ]
   then
@@ -20,4 +20,4 @@ cd "$( dirname "$0" )"
 rm -rf out
 
 #Run docker build
-docker compose -f docker-compose.yml up
+docker compose -f packaging/compose.yml up --build --abort-on-container-exit
