@@ -5,16 +5,20 @@ import io.github.trethore.jcefgithub.EnumPlatform;
 import io.github.trethore.jcefgithub.impl.util.JsonStringMapLoader;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
+import java.time.Duration;
 import java.util.Collection;
+import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -33,6 +37,10 @@ public final class PackageDownloader {
     private static final int BUFFER_SIZE = 16 * 1024;
     private static final int CONNECT_TIMEOUT_MILLIS = 15_000;
     private static final int READ_TIMEOUT_MILLIS = 60_000;
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofMillis(CONNECT_TIMEOUT_MILLIS))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
 
     public static void downloadNatives(CefBuildInfo info, EnumPlatform platform, File destination,
             Consumer<Float> progressConsumer, Collection<String> mirrors) throws IOException {
@@ -40,10 +48,11 @@ public final class PackageDownloader {
         Map<String, String> metadata = loadMetadata();
         String mavenVersion = requireMetadata(metadata, "version");
         String expectedSha256 = requireMetadata(metadata, "sha256_" + platform.getIdentifier().replace('-', '_'));
-        createDestinationFile(destination);
+        List<String> resolvedMirrors = mirrors.stream()
+                .map(mirror -> resolveMirrorUrl(mirror, info, platform, mavenVersion))
+                .toList();
         try {
-            downloadFromMirrors(info, platform, destination, progressConsumer, mirrors, mavenVersion);
-            verifySha256(destination, expectedSha256);
+            downloadFromMirrors(resolvedMirrors, destination, progressConsumer, expectedSha256);
         } catch (IOException e) {
             deleteIncompleteDestination(destination);
             throw e;
@@ -93,12 +102,6 @@ public final class PackageDownloader {
         }
     }
 
-    private static void createDestinationFile(File destination) throws IOException {
-        if (!destination.createNewFile()) {
-            throw new IOException("Could not create target file " + destination.getAbsolutePath());
-        }
-    }
-
     private static void deleteIncompleteDestination(File destination) {
         if (!destination.exists()) {
             return;
@@ -108,19 +111,19 @@ public final class PackageDownloader {
         }
     }
 
-    private static void downloadFromMirrors(CefBuildInfo info, EnumPlatform platform, File destination,
-            Consumer<Float> progressConsumer, Collection<String> mirrors,
-            String mavenVersion) throws IOException {
+    static void downloadFromMirrors(Collection<String> resolvedMirrors, File destination,
+            Consumer<Float> progressConsumer, String expectedSha256) throws IOException {
         IOException lastException = null;
-        for (String mirror : mirrors) {
-            String resolvedMirror = resolveMirrorUrl(mirror, info, platform, mavenVersion);
+        for (String resolvedMirror : resolvedMirrors) {
             try {
-                if (downloadFromMirror(resolvedMirror, destination, progressConsumer)) {
-                    return;
-                }
+                downloadFromMirror(resolvedMirror, destination, progressConsumer);
+                verifySha256(destination, expectedSha256);
+                return;
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Request failed with exception on mirror: " + resolvedMirror, e);
+                LOGGER.log(Level.WARNING, "Mirror failed: {0} ({1})",
+                        new Object[] { resolvedMirror, e.getMessage() });
                 lastException = e;
+                deleteIncompleteDestination(destination);
             }
         }
         throwIfDownloadFailed(lastException);
@@ -141,36 +144,37 @@ public final class PackageDownloader {
         throw new IOException("None of the supplied mirrors were working", lastException);
     }
 
-    private static boolean downloadFromMirror(String mirrorUrl, File destination, Consumer<Float> progressConsumer)
+    private static void downloadFromMirror(String mirrorUrl, File destination, Consumer<Float> progressConsumer)
             throws IOException {
-        HttpURLConnection connection = openConnection(mirrorUrl);
+        HttpRequest request;
         try {
-            int responseCode = connection.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                LOGGER.log(Level.WARNING, "Request to mirror failed with code " + responseCode
-                        + " from server: " + mirrorUrl);
-                return false;
+            request = HttpRequest.newBuilder(URI.create(mirrorUrl))
+                    .timeout(Duration.ofMillis(READ_TIMEOUT_MILLIS))
+                    .GET()
+                    .build();
+        } catch (IllegalArgumentException e) {
+            throw new IOException("Invalid mirror URL: " + mirrorUrl, e);
+        }
+        try {
+            HttpResponse<InputStream> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            if (response.statusCode() != 200) {
+                response.body().close();
+                throw new IOException("Mirror returned HTTP " + response.statusCode() + ": " + mirrorUrl);
             }
-            transfer(connection, destination, progressConsumer);
-            return true;
-        } finally {
-            connection.disconnect();
+            long length = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
+            try (InputStream body = response.body()) {
+                transfer(body, length, destination, progressConsumer);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while downloading from " + mirrorUrl, e);
         }
     }
 
-    private static HttpURLConnection openConnection(String mirrorUrl) throws IOException {
-        URL url = new URL(mirrorUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
-        connection.setReadTimeout(READ_TIMEOUT_MILLIS);
-        return connection;
-    }
-
-    private static void transfer(HttpURLConnection connection, File destination, Consumer<Float> progressConsumer)
+    private static void transfer(InputStream in, long length, File destination, Consumer<Float> progressConsumer)
             throws IOException {
-        long length = connection.getContentLengthLong();
-        try (InputStream in = connection.getInputStream();
-                FileOutputStream fos = new FileOutputStream(destination, false)) {
+        try (var out = Files.newOutputStream(destination.toPath(), StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
             byte[] buffer = new byte[BUFFER_SIZE];
             long transferred = 0;
             long progress = 0;
@@ -181,11 +185,11 @@ public final class PackageDownloader {
                 if (read == 0) {
                     continue;
                 }
-                fos.write(buffer, 0, read);
+                out.write(buffer, 0, read);
                 transferred += read;
                 progress = updateProgress(length, transferred, progress, progressConsumer);
             }
-            fos.flush();
+            out.flush();
 
             if (length <= 0 || progress < 100) {
                 progressConsumer.accept(100f);

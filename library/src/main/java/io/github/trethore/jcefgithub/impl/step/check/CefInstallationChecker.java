@@ -30,15 +30,14 @@ public final class CefInstallationChecker {
         try {
             installed = CefBuildInfo.fromFile(buildInfo);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error while parsing existing installation. Reinstalling.", e);
+            LOGGER.log(Level.WARNING, "Existing installation metadata is invalid; reinstalling: {0}", e.getMessage());
             return false;
         }
         CefBuildInfo required;
         try {
             required = CefBuildInfo.fromClasspath();
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error while parsing existing installation. Reinstalling.", e);
-            return false;
+            throw new IllegalStateException("Could not read required JCEF build metadata", e);
         }
         // The install is ok when tag and platform match
         return required.getReleaseTag().equals(installed.getReleaseTag())

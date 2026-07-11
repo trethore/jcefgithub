@@ -1,27 +1,19 @@
 package io.github.trethore.jcefgithub;
 
 import io.github.trethore.jcefgithub.impl.progress.ConsoleProgressHandler;
-import io.github.trethore.jcefgithub.impl.step.check.CefInstallationChecker;
-import io.github.trethore.jcefgithub.impl.step.extract.TarGzExtractor;
-import io.github.trethore.jcefgithub.impl.step.fetch.PackageClasspathStreamer;
-import io.github.trethore.jcefgithub.impl.step.fetch.PackageDownloader;
+import io.github.trethore.jcefgithub.impl.step.CefInstaller;
 import io.github.trethore.jcefgithub.impl.step.init.CefInitializer;
-import io.github.trethore.jcefgithub.impl.util.FileUtils;
-import io.github.trethore.jcefgithub.impl.util.macos.UnquarantineUtil;
 import org.cef.CefApp;
 import org.cef.CefSettings;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileLock;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Class used to configure the JCef environment. Specify
@@ -59,14 +51,13 @@ public class CefAppBuilder {
     private static final IProgressHandler DEFAULT_PROGRESS_HANDLER = new ConsoleProgressHandler();
     private static final List<String> DEFAULT_JCEF_ARGS = new LinkedList<>();
     private static final CefSettings DEFAULT_CEF_SETTINGS = new CefSettings();
-    private final Object lock = new Object();
+    private static final Object APP_LOCK = new Object();
+    private static volatile CefApp sharedInstance;
+    private static boolean building;
     private final List<String> jcefArgs;
     private final CefSettings cefSettings;
     private File installDir;
     private IProgressHandler progressHandler;
-    private volatile CefApp instance = null;
-    private boolean building = false;
-    private boolean installed = false;
     private boolean skipInstallation = false;
     private final List<String> mirrors;
 
@@ -157,7 +148,7 @@ public class CefAppBuilder {
      * @param handlerAdapter the adapter to attach
      */
     public void setAppHandler(MavenCefAppHandlerAdapter handlerAdapter) {
-        CefApp.addAppHandler(handlerAdapter);
+        CefApp.addAppHandler(Objects.requireNonNull(handlerAdapter, "handlerAdapter cannot be null"));
     }
 
     /**
@@ -191,6 +182,14 @@ public class CefAppBuilder {
      */
     public void setMirrors(Collection<String> mirrors) {
         Objects.requireNonNull(mirrors, "mirrors can not be null");
+        if (mirrors.isEmpty()) {
+            throw new IllegalArgumentException("mirrors cannot be empty");
+        }
+        for (String mirror : mirrors) {
+            if (mirror == null || mirror.isBlank()) {
+                throw new IllegalArgumentException("mirrors cannot contain null or blank values");
+            }
+        }
         this.mirrors.clear();
         this.mirrors.addAll(mirrors);
     }
@@ -222,32 +221,20 @@ public class CefAppBuilder {
 
     /**
      * Helper method to install the native libraries/resources. Useful for
-     * triggering an install ahead of actually
-     * needing to create a CEF app instance. This method is NOT thread safe and the
-     * caller must ensure only one thread
-     * will call this method at a time.
+     * triggering an install ahead of actually needing to create a CEF app instance.
+     * Calls are serialized within this builder and across processes targeting the
+     * same installation directory.
      *
      * @return This builder instance
      * @throws IOException                  if an artifact could not be fetched or
      *                                      IO-actions on disk failed
      * @throws UnsupportedPlatformException if the platform is not supported
      */
-    public CefAppBuilder install() throws IOException, UnsupportedPlatformException {
-        if (this.installed || this.skipInstallation) {
+    public synchronized CefAppBuilder install() throws IOException, UnsupportedPlatformException {
+        if (this.skipInstallation) {
             return this;
         }
-
-        this.progressHandler.handleProgress(EnumProgress.LOCATING, EnumProgress.NO_ESTIMATION);
-
-        File lockFile = new File(installationParent(), this.installDir.getName() + ".installing.lock");
-        try (RandomAccessFile lockAccess = new RandomAccessFile(lockFile, "rw");
-             FileLock ignored = lockAccess.getChannel().lock()) {
-            if (!CefInstallationChecker.checkInstallation(this.installDir)) {
-                installNativeBundle();
-            }
-        }
-
-        this.installed = true;
+        new CefInstaller(installDir.toPath(), progressHandler, mirrors).install();
         return this;
     }
 
@@ -265,12 +252,12 @@ public class CefAppBuilder {
      */
     public CefApp build()
             throws IOException, UnsupportedPlatformException, InterruptedException, CefInitializationException {
-        if (this.instance != null) {
-            return this.instance;
+        if (sharedInstance != null) {
+            return sharedInstance;
         }
 
         if (!beginBuild()) {
-            return this.instance;
+            return sharedInstance;
         }
 
         try {
@@ -285,126 +272,34 @@ public class CefAppBuilder {
         }
     }
 
-    private void installNativeBundle() throws IOException, UnsupportedPlatformException {
-        CefBuildInfo buildInfo = CefBuildInfo.fromClasspath();
-        EnumPlatform currentPlatform = EnumPlatform.getCurrentPlatform();
-        File parent = installationParent();
-        File staging = Files.createTempDirectory(parent.toPath(), installDir.getName() + ".staging-").toFile();
-        File download = new File(staging, "download.zip.temp");
-
-        try {
-            try (InputStream in = resolveNativeBundleStream(buildInfo, currentPlatform, download)) {
-                extractNativeBundle(staging, in);
-            }
-            completeInstallation(staging, currentPlatform);
-            FileUtils.deleteDir(this.installDir);
-            try {
-                Files.move(staging.toPath(), this.installDir.toPath(), StandardCopyOption.ATOMIC_MOVE);
-            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
-                Files.move(staging.toPath(), this.installDir.toPath());
-            }
-        } finally {
-            deleteDownloadedArchive(download);
-            if (staging.exists()) FileUtils.deleteDir(staging);
-        }
-    }
-
-    private File installationParent() throws IOException {
-        File parent = installDir.getAbsoluteFile().getParentFile();
-        if (parent == null) parent = new File(".").getAbsoluteFile();
-        if (!parent.isDirectory() && !parent.mkdirs()) {
-            throw new IOException("Could not create installation parent: " + parent);
-        }
-        return parent;
-    }
-
-    private InputStream resolveNativeBundleStream(CefBuildInfo buildInfo, EnumPlatform currentPlatform, File download)
-            throws IOException {
-        InputStream classpathBundle = PackageClasspathStreamer.streamNatives(buildInfo, currentPlatform);
-        if (classpathBundle != null) {
-            return classpathBundle;
-        }
-        return downloadNativeBundle(buildInfo, currentPlatform, download);
-    }
-
-    private InputStream downloadNativeBundle(CefBuildInfo buildInfo, EnumPlatform currentPlatform, File download)
-            throws IOException {
-        this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, EnumProgress.NO_ESTIMATION);
-        PackageDownloader.downloadNatives(
-                buildInfo,
-                currentPlatform,
-                download,
-                progress -> this.progressHandler.handleProgress(EnumProgress.DOWNLOADING, progress),
-                getMirrors());
-        return openTarGzFromArchive(download);
-    }
-
-    private void extractNativeBundle(File destination, InputStream in) throws IOException {
-        this.progressHandler.handleProgress(EnumProgress.EXTRACTING, EnumProgress.NO_ESTIMATION);
-        TarGzExtractor.extractTarGZ(destination, in);
-    }
-
-    private void deleteDownloadedArchive(File download) {
-        if (!download.exists()) {
-            return;
-        }
-        if (!download.delete()) download.deleteOnExit();
-    }
-
-    private void completeInstallation(File destination, EnumPlatform currentPlatform) throws IOException {
-        this.progressHandler.handleProgress(EnumProgress.INSTALL, EnumProgress.NO_ESTIMATION);
-        if (currentPlatform.getOs().isMacOSX()) {
-            UnquarantineUtil.unquarantine(destination);
-        }
-        createInstallLock(destination);
-    }
-
-    private void createInstallLock(File destination) throws IOException {
-        if (!new File(destination, "install.lock").createNewFile()) {
-            throw new IOException("Could not create install.lock to complete installation");
-        }
-    }
-
-    private InputStream openTarGzFromArchive(File archive) throws IOException {
-        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(archive));
-        ZipEntry entry;
-        while ((entry = zipInputStream.getNextEntry()) != null) {
-            if (entry.getName().endsWith(".tar.gz")) {
-                return zipInputStream;
-            }
-        }
-        zipInputStream.close();
-        throw new IOException("Downloaded artifact did not contain a .tar.gz archive");
-    }
-
     private boolean beginBuild() throws InterruptedException {
-        synchronized (lock) {
-            while (building && this.instance == null) {
-                lock.wait();
+        synchronized (APP_LOCK) {
+            while (building && sharedInstance == null) {
+                APP_LOCK.wait();
             }
-            if (this.instance != null) {
+            if (sharedInstance != null) {
                 return false;
             }
-            this.building = true;
+            building = true;
             return true;
         }
     }
 
     private CefApp publishInstance(CefApp created) {
-        synchronized (lock) {
-            if (this.instance == null) {
-                this.instance = created;
+        synchronized (APP_LOCK) {
+            if (sharedInstance == null) {
+                sharedInstance = created;
                 Runtime.getRuntime().addShutdownHook(new Thread(created::dispose, "jcef-shutdown"));
                 this.progressHandler.handleProgress(EnumProgress.INITIALIZED, EnumProgress.NO_ESTIMATION);
             }
-            return this.instance;
+            return sharedInstance;
         }
     }
 
     private void endBuild() {
-        synchronized (lock) {
-            this.building = false;
-            lock.notifyAll();
+        synchronized (APP_LOCK) {
+            building = false;
+            APP_LOCK.notifyAll();
         }
     }
 }

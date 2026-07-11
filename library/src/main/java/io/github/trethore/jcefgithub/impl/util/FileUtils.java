@@ -1,7 +1,12 @@
 package io.github.trethore.jcefgithub.impl.util;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,20 +22,37 @@ public final class FileUtils {
 
     public static void deleteDir(File dir) {
         Objects.requireNonNull(dir, "dir cannot be null");
-        if (!dir.exists())
-            return;
-        if (dir.isDirectory() && !Files.isSymbolicLink(dir.toPath())) {
-            File[] children = dir.listFiles();
-            if (children == null) {
-                LOGGER.log(Level.WARNING, "Could not read contents of " + dir.getAbsolutePath());
-            } else {
-                for (File f : children) {
-                    deleteDir(f);
-                }
+        try {
+            deleteRecursivelyIfExists(dir.toPath());
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not delete " + dir.getAbsolutePath(), e);
+        }
+    }
+
+    public static void deleteRecursivelyIfExists(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
+        if (Files.exists(path)) {
+            deleteRecursively(path);
+        }
+    }
+
+    public static void deleteRecursively(Path path) throws IOException {
+        Objects.requireNonNull(path, "path cannot be null");
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
             }
-        }
-        if (!dir.delete()) {
-            LOGGER.log(Level.WARNING, "Could not delete " + dir.getAbsolutePath());
-        }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException error) throws IOException {
+                if (error != null) {
+                    throw error;
+                }
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 }

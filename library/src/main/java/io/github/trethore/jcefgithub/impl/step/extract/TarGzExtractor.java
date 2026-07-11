@@ -34,10 +34,12 @@ public final class TarGzExtractor {
                 } else if (entry.isDirectory()) {
                     createDirectory(f);
                     setExecutableIfNeeded(f, entry.getMode());
-                } else {
+                } else if (entry.isFile()) {
                     createFileParent(f);
                     writeFileContent(tarIn, f);
                     setExecutableIfNeeded(f, entry.getMode());
+                } else {
+                    throw new IOException("Unsupported archive entry type: " + entry.getName());
                 }
             }
         }

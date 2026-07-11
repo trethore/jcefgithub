@@ -16,7 +16,7 @@ import java.util.Objects;
  * @author Titouan Réthoré
  */
 public class CefBuildInfo {
-    private static CefBuildInfo LOCAL_BUILD_INFO = null;
+    private static CefBuildInfo localBuildInfo;
     private final String jcefUrl;
     private final String releaseTag;
     private final String releaseUrl;
@@ -37,13 +37,13 @@ public class CefBuildInfo {
      *                              exist on classpath
      * @throws IOException          if reading the build info failed
      */
-    public static CefBuildInfo fromClasspath() throws IOException {
-        if (LOCAL_BUILD_INFO == null) {
-            LOCAL_BUILD_INFO = loadData(
+    public static synchronized CefBuildInfo fromClasspath() throws IOException {
+        if (localBuildInfo == null) {
+            localBuildInfo = loadData(
                     Objects.requireNonNull(CefApp.class.getResourceAsStream("/build_meta.json"),
                             "The build_meta.json file from the jcef-api artifact could not be read"));
         }
-        return LOCAL_BUILD_INFO;
+        return localBuildInfo;
     }
 
     /**
@@ -54,7 +54,7 @@ public class CefBuildInfo {
      * @throws IOException if reading the file failed
      */
     public static CefBuildInfo fromFile(File file) throws IOException {
-        return loadData(Files.newInputStream(file.toPath()));
+        return loadData(Files.newInputStream(Objects.requireNonNull(file, "file cannot be null").toPath()));
     }
 
     private static CefBuildInfo loadData(InputStream in) throws IOException {
@@ -66,8 +66,12 @@ public class CefBuildInfo {
                 requireValue(object, "platform"));
     }
 
-    private static String requireValue(Map<String, String> object, String key) {
-        return Objects.requireNonNull(object.get(key), "No " + key + " specified in build_meta.json");
+    private static String requireValue(Map<String, String> object, String key) throws IOException {
+        String value = object.get(key);
+        if (value == null || value.isBlank()) {
+            throw new IOException("No " + key + " specified in build_meta.json");
+        }
+        return value;
     }
 
     public String getJcefUrl() {
