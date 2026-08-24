@@ -16,6 +16,7 @@ import java.util.logging.Logger;
  */
 public final class UnquarantineUtil {
     private static final Logger LOGGER = Logger.getLogger(UnquarantineUtil.class.getName());
+    private static final String XATTR_PATH = "/usr/bin/xattr";
 
     private UnquarantineUtil() { }
 
@@ -32,7 +33,7 @@ public final class UnquarantineUtil {
     public static void unquarantine(Path dir) throws IOException {
         Objects.requireNonNull(dir, "dir cannot be null");
         Process process = new ProcessBuilder(
-                "xattr", "-r", "-d", "com.apple.quarantine", dir.toAbsolutePath().toString())
+                XATTR_PATH, "-r", "-d", "com.apple.quarantine", dir.toAbsolutePath().toString())
                 .redirectErrorStream(true)
                 .start();
         try {
