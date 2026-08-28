@@ -17,7 +17,10 @@ on:
         options: [both, github, maven]
 
 concurrency:
-  group: publish-${{ inputs.mvn_version }}
+  # Native artifacts are versioned by the JCEF release tag, not mvn_version.
+  # Serialize all releases so two wrapper versions cannot publish the same
+  # native coordinate concurrently.
+  group: publish
   cancel-in-progress: false
 
 jobs:

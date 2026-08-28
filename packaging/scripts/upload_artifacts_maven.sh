@@ -91,22 +91,48 @@ artifact_exists_on_maven_central() {
   local artifact_id="$1"
   local version="$2"
   local pom_url="$maven_central_base_url/$group_path/$artifact_id/$version/$artifact_id-$version.pom"
-  curl -fsI "$pom_url" >/dev/null 2>&1
+  local http_code
+
+  http_code=$(curl --silent --show-error --location --output /dev/null --write-out '%{http_code}' \
+    --proto '=https' --tlsv1.2 "$pom_url") || {
+      echo "Could not check Maven Central for $artifact_id:$version" >&2
+      exit 1
+    }
+
+  case "$http_code" in
+    200) return 0 ;;
+    404) return 1 ;;
+    *)
+      echo "Maven Central returned HTTP $http_code for $artifact_id:$version" >&2
+      exit 1
+      ;;
+  esac
+}
+
+verify_existing_artifact_matches() {
+  local artifact_id="$1"
+  local version="$2"
+  local local_file="$3"
+  local checksum_url="$maven_central_base_url/$group_path/$artifact_id/$version/$artifact_id-$version.jar.sha256"
+  local remote_sha256
+  local local_sha256
+
+  remote_sha256=$(curl --fail --show-error --silent --location --retry 3 \
+    --proto '=https' --tlsv1.2 "$checksum_url" | tr -d '[:space:]')
+  local_sha256=$(sha256sum "$local_file" | cut -d' ' -f1)
+
+  if [ "$remote_sha256" != "$local_sha256" ]; then
+    echo "Refusing to skip $artifact_id:$version: the local JAR does not match Maven Central" >&2
+    echo "Maven Central SHA-256: $remote_sha256" >&2
+    echo "Local SHA-256:         $local_sha256" >&2
+    exit 1
+  fi
 }
 
 stage_artifact() {
   local artifact_id="$1"
   local version="$2"
-
-  if artifact_exists_on_maven_central "$artifact_id" "$version"; then
-    echo "Skipping $artifact_id:$version because it already exists on Maven Central"
-    return
-  fi
-
-  local artifact_dir="central-bundle/$group_path/$artifact_id/$version"
   local basename="$artifact_id-$version"
-  mkdir -p "$artifact_dir"
-
   local main_jar="upload/$basename.jar"
   local pom_file="upload/$basename.pom"
   local sources_jar="upload/$basename-sources.jar"
@@ -132,6 +158,15 @@ stage_artifact() {
     echo "Missing required javadoc jar: $javadoc_jar"
     exit 1
   fi
+
+  if artifact_exists_on_maven_central "$artifact_id" "$version"; then
+    verify_existing_artifact_matches "$artifact_id" "$version" "$main_jar"
+    echo "Skipping $artifact_id:$version because the identical artifact already exists on Maven Central"
+    return
+  fi
+
+  local artifact_dir="central-bundle/$group_path/$artifact_id/$version"
+  mkdir -p "$artifact_dir"
 
   local artifact_files=(
     "$main_jar"
@@ -193,7 +228,7 @@ echo "Deployment id: $deployment_id"
 
 status_url="https://central.sonatype.com/api/v1/publisher/status?id=$deployment_id"
 
-echo "Waiting for deployment to reach PUBLISHING state..."
+echo "Waiting for deployment to reach PUBLISHED state..."
 for _ in {1..180}; do
   status_response="$(curl -fsS --request POST --header "Authorization: Bearer $auth_token" "$status_url")"
   deployment_state="$(printf '%s' "$status_response" | jq -r '.deploymentState')"
@@ -201,8 +236,8 @@ for _ in {1..180}; do
   echo "Deployment state: $deployment_state"
 
   case "$deployment_state" in
-    PUBLISHING)
-      echo "Deployment entered PUBLISHING state."
+    PUBLISHED)
+      echo "Deployment reached PUBLISHED state."
       exit 0
       ;;
     FAILED)
